@@ -14,7 +14,22 @@ An MCP (Model Context Protocol) server for the MBTA V3 API, providing access to 
 
 ## Installation
 
-### Option 1: Install as a tool (Recommended)
+### Option 1: Direct run with uv (Easiest)
+
+No installation required! Just run directly:
+
+```bash
+uv tool run mbta-mcp
+```
+
+Set your MBTA API key as an environment variable:
+
+```bash
+export MBTA_API_KEY=your_api_key_here
+uv tool run mbta-mcp
+```
+
+### Option 2: Install as a tool
 
 Install directly with uv tool:
 
@@ -34,7 +49,7 @@ Run the server:
 mbta-mcp
 ```
 
-### Option 2: Development Setup
+### Option 3: Development Setup
 
 1. Clone and install dependencies:
 
@@ -58,6 +73,9 @@ mbta-mcp
 Run the MCP server:
 
 ```bash
+# Direct run (no installation needed)
+uv tool run mbta-mcp
+
 # If installed as a tool
 mbta-mcp
 
@@ -91,7 +109,29 @@ uv run mbta-mcp
 
 ### Claude Desktop
 
-#### Option 1: Using uv tool (Recommended)
+#### Option 1: Using uv tool run (Easiest - No Installation Required)
+
+**Add to Claude Desktop configuration:**
+
+On macOS, edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mbta": {
+      "command": "uv",
+      "args": ["tool", "run", "mbta-mcp"],
+      "env": {
+        "MBTA_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+On Windows, edit `%APPDATA%\Claude\claude_desktop_config.json` with the same content.
+
+#### Option 2: Using uv tool install (Recommended for Regular Use)
 
 1. **Install the MCP server:**
 
@@ -118,7 +158,7 @@ uv run mbta-mcp
 
    On Windows, edit `%APPDATA%\Claude\claude_desktop_config.json` with the same content.
 
-#### Option 2: Using development setup
+#### Option 3: Using development setup
 
 1. **Clone and setup the MCP server:**
 
@@ -163,7 +203,24 @@ uv run mbta-mcp
 
 #### Continue.dev
 
-Using uv tool installation:
+**Using uv tool run (easiest):**
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "mbta",
+      "command": "uv",
+      "args": ["tool", "run", "mbta-mcp"],
+      "env": {
+        "MBTA_API_KEY": "your_api_key_here"
+      }
+    }
+  ]
+}
+```
+
+**Using uv tool installation:**
 
 ```json
 {
@@ -179,7 +236,7 @@ Using uv tool installation:
 }
 ```
 
-Or with development setup:
+**Or with development setup:**
 
 ```json
 {
@@ -199,7 +256,24 @@ Or with development setup:
 
 #### Codeium
 
-Using uv tool installation:
+**Using uv tool run (easiest):**
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "mbta": {
+        "command": ["uv", "tool", "run", "mbta-mcp"],
+        "env": {
+          "MBTA_API_KEY": "your_api_key_here"
+        }
+      }
+    }
+  }
+}
+```
+
+**Using uv tool installation:**
 
 ```json
 {
@@ -216,7 +290,7 @@ Using uv tool installation:
 }
 ```
 
-Or with development setup:
+**Or with development setup:**
 
 ```json
 {
@@ -236,7 +310,12 @@ Or with development setup:
 
 #### Generic MCP Client
 
-**Using uv tool:**
+**Using uv tool run (easiest):**
+
+- **Command:** `uv tool run mbta-mcp`
+- **Environment:** `MBTA_API_KEY=your_api_key_here`
+
+**Using uv tool install:**
 
 - **Command:** `mbta-mcp`
 - **Environment:** `MBTA_API_KEY=your_api_key_here`

@@ -3,6 +3,8 @@
 import asyncio
 import json
 import logging
+import os
+import sys
 from typing import Any
 
 import mcp.server.stdio
@@ -15,6 +17,13 @@ from .extended_client import ExtendedMBTAClient
 
 load_dotenv()
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stderr,
+)
+
 logger = logging.getLogger("mbta-mcp")
 
 server: Server = Server("mbta-mcp")  # type: ignore[type-arg]
@@ -23,6 +32,9 @@ server: Server = Server("mbta-mcp")  # type: ignore[type-arg]
 @server.list_tools()  # type: ignore[misc, no-untyped-call]
 async def handle_list_tools() -> list[types.Tool]:
     """List available tools."""
+    logger.info("Client requested list of available tools")
+    tool_count = 14  # We have 14 MBTA tools
+    logger.info("Returning %d MBTA API tools", tool_count)
     return [
         types.Tool(
             name="mbta_get_routes",
@@ -392,10 +404,15 @@ async def handle_call_tool(
     name: str, arguments: dict[str, Any] | None
 ) -> list[types.TextContent]:
     """Handle tool calls."""
+    logger.info("Received tool call: %s", name)
+    if arguments:
+        logger.debug("Tool arguments: %s", arguments)
+
     if arguments is None:
         arguments = {}
 
     try:
+        logger.info("Initializing MBTA client for %s", name)
         client: ExtendedMBTAClient
         async with ExtendedMBTAClient() as client:
             if name == "mbta_get_routes":
@@ -497,29 +514,59 @@ async def handle_call_tool(
             else:
                 raise ValueError(f"Unknown tool: {name}")
 
+            logger.info("Successfully executed %s", name)
+            response_size = len(json.dumps(result))
+            logger.debug("Response size: %d characters", response_size)
             return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
 
     except Exception as e:
-        logger.exception("Error in %s", name)
+        logger.exception("Error executing %s", name)
         return [types.TextContent(type="text", text=f"Error: {e!s}")]
 
 
-async def main() -> None:
-    """Main entry point for the server."""
-    async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            InitializationOptions(
-                server_name="mbta-mcp",
-                server_version="0.1.0",
-                capabilities=server.get_capabilities(
-                    notification_options=NotificationOptions(),
-                    experimental_capabilities={},
-                ),
-            ),
+async def async_main() -> None:
+    """Async main entry point for the server."""
+    logger.info("🚇 MBTA MCP Server starting up...")
+
+    # Check MBTA API key status
+    api_key = os.getenv("MBTA_API_KEY")
+    if api_key:
+        logger.info("✓ MBTA API key found (length: %d)", len(api_key))
+    else:
+        logger.warning(
+            "⚠ No MBTA API key configured (some endpoints may be rate-limited)"
         )
+
+    logger.info("Starting MCP server on stdio...")
+
+    try:
+        async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
+            logger.info("✓ MCP server connected, waiting for client...")
+            await server.run(
+                read_stream,
+                write_stream,
+                InitializationOptions(
+                    server_name="mbta-mcp",
+                    server_version="0.1.0",
+                    capabilities=server.get_capabilities(
+                        notification_options=NotificationOptions(),
+                        experimental_capabilities={},
+                    ),
+                ),
+            )
+    except KeyboardInterrupt:
+        logger.info("🛑 Server shutdown requested")
+    except Exception:
+        logger.exception("💥 Server error")
+        raise
+    finally:
+        logger.info("🚇 MBTA MCP Server shutting down...")
+
+
+def main() -> None:
+    """Main entry point for the server (synchronous wrapper)."""
+    asyncio.run(async_main())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
