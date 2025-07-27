@@ -1,0 +1,83 @@
+version: '3'
+
+vars:
+  PYTHON_FILES: "mbta_mcp/"
+
+tasks:
+  install:
+    desc: Install dependencies
+    cmds:
+      - uv sync
+
+  install-dev:
+    desc: Install dependencies including dev tools
+    cmds:
+      - uv sync --dev
+
+  format:
+    desc: Format code with ruff
+    cmds:
+      - uv run ruff format {{.PYTHON_FILES}}
+
+  lint:
+    desc: Run linting with ruff
+    cmds:
+      - uv run ruff check {{.PYTHON_FILES}}
+
+  lint-fix:
+    desc: Run linting with ruff and fix issues
+    cmds:
+      - uv run ruff check {{.PYTHON_FILES}} --fix
+
+  typecheck:
+    desc: Run type checking with mypy
+    cmds:
+      - uv run mypy {{.PYTHON_FILES}}
+
+  test:
+    desc: Run tests with pytest
+    cmds:
+      - uv run pytest
+
+  check:
+    desc: Run all checks (format, lint, typecheck)
+    deps: [format, lint, typecheck]
+
+  run:
+    desc: Run the MBTA MCP server
+    cmds:
+      - uv run mbta-mcp
+
+  dev:
+    desc: Install dev dependencies and run all checks
+    deps: [install-dev, check]
+
+  clean:
+    desc: Clean up build artifacts and cache
+    cmds:
+      - rm -rf .mypy_cache/
+      - rm -rf .pytest_cache/
+      - rm -rf __pycache__/
+      - find . -name "*.pyc" -delete
+      - find . -name "*.pyo" -delete
+
+  test-server:
+    desc: Test MCP server functionality
+    cmds:
+      - uv run python test_server.py
+
+  verify:
+    desc: Verify the project is properly set up and working
+    cmds:
+      - echo "Installing dependencies..."
+      - task: install-dev
+      - echo "Running code quality checks..."
+      - task: check
+      - echo "Testing server functionality..."
+      - task: test-server
+      - echo "✓ Project verification complete!"
+
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list

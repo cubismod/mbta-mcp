@@ -1,0 +1,171 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mbta-mcp"
+dynamic = ["version"]
+description = "MCP server for MBTA V3 API"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Ryan Wallace", email = "ryan@hexa.mozmail.com"},
+]
+requires-python = ">=3.11, <4.0"
+dependencies = [
+    "aiohttp>=3.12.14",
+    "mcp>=1.0.0",
+    "pydantic>=2.11.7",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+mbta-mcp = "mbta_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/cubismod/mbta-mcp"
+Repository = "https://github.com/cubismod/mbta-mcp.git"
+Issues = "https://github.com/cubismod/mbta-mcp/issues"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "mbta_mcp/_version.py"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "mypy>=1.17.0",
+    "ruff>=0.12.5",
+    "codespell>=2.2.0",
+    "hatch-vcs>=0.5.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "YTT", # flake8-2020
+    "S",   # flake8-bandit
+    "BLE", # flake8-blind-except
+    "FBT", # flake8-boolean-trap
+    "A",   # flake8-builtins
+    "COM", # flake8-commas
+    "C90", # mccabe
+    "DTZ", # flake8-datetimez
+    "T10", # flake8-debugger
+    "EM",  # flake8-errmsg
+    "EXE", # flake8-executable
+    "FA",  # flake8-future-annotations
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "G",   # flake8-logging-format
+    "INP", # flake8-no-pep420
+    "PIE", # flake8-pie
+    "T20", # flake8-print
+    "PYI", # flake8-pyi
+    "PT",  # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "SLF", # flake8-self
+    "SLOT", # flake8-slots
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "TCH", # flake8-type-checking
+    "INT", # flake8-gettext
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "TD",  # flake8-todos
+    "FIX", # flake8-fixme
+    "ERA", # eradicate
+    "PD",  # pandas-vet
+    "PGH", # pygrep-hooks
+    "PL",  # pylint
+    "TRY", # tryceratops
+    "FLY", # flynt
+    "NPY", # numpy
+    "PERF", # perflint
+    "FURB", # refurb
+    "LOG", # flake8-logging
+    "RUF", # ruff-specific rules
+]
+
+ignore = [
+    "S101",    # assert
+    "T20",     # flake8-print
+    "ANN401",  # any-type
+    "COM812",  # missing-trailing-comma
+    "ISC001",  # single-line-implicit-string-concatenation
+    "PLR0913", # too-many-arguments (common in API clients)
+    "FBT001",  # boolean-typed-positional-argument
+    "FBT002",  # boolean-default-positional-argument
+    "TRY003",  # raise-vanilla-args
+    "EM101",   # raw-string-in-exception
+    "EM102",   # f-string-in-exception
+    "C901",    # complex-structure (tool dispatch)
+    "PLR0912", # too-many-branches (tool dispatch)
+    "TRY301",  # raise-within-try
+]
+
+[tool.ruff.lint.per-file-ignores]
+"test_*.py" = [
+    "S101",    # assert
+    "PLR2004", # magic-value-comparison
+    "SLF001",  # private-member-access
+]
+"mbta_mcp/_version.py" = [
+    "ALL",     # ignore all rules for auto-generated version file
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["mcp.*"]
+ignore_missing_imports = true
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "mbta_mcp"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.codespell]
+skip = ".git,*.lock"
+check-filenames = true
