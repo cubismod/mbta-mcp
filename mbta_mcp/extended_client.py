@@ -234,4 +234,6 @@ class ExtendedMBTAClient(MBTAClient):
         params: dict[str, Any] = {"include": "stops"}
         if direction_id is not None:
             params["filter[direction_id]"] = direction_id
-        return cast("dict[str, Any]", await self._request(f"/routes/{route_id}", params))
+        return cast(
+            "dict[str, Any]", await self._request(f"/routes/{route_id}", params)
+        )
