@@ -12,6 +12,134 @@ class ExtendedMBTAClient(MBTAClient):
         await super().__aenter__()
         return self
 
+    async def get_vehicle_positions(self) -> dict[str, Any]:
+        """Get real-time vehicle positions from the external API.
+
+        Fetches vehicle position data from https://vehicles.ryanwallace.cloud/
+        which provides GeoJSON format data with vehicle locations, routes, and status.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = "https://vehicles.ryanwallace.cloud/"
+
+        async with self.session.get(url) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
+    async def get_external_alerts(self) -> dict[str, Any]:
+        """Get general alerts from the external API.
+
+        Fetches alert data from https://vehicles.ryanwallace.cloud/alerts
+        which provides real-time service alerts, delays, and disruptions.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = "https://vehicles.ryanwallace.cloud/alerts"
+
+        async with self.session.get(url) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
+    async def get_track_prediction(
+        self,
+        station_id: str,
+        route_id: str,
+        trip_id: str,
+        headsign: str,
+        direction_id: int,
+        scheduled_time: str,
+    ) -> dict[str, Any]:
+        """Get track prediction for a specific trip.
+
+        Uses the IMT Track Prediction API to predict which track a train will use.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = "https://imt.ryanwallace.cloud/predictions"
+        params = {
+            "station_id": station_id,
+            "route_id": route_id,
+            "trip_id": trip_id,
+            "headsign": headsign,
+            "direction_id": str(direction_id),
+            "scheduled_time": scheduled_time,
+        }
+
+        async with self.session.post(url, params=params) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
+    async def get_chained_track_predictions(
+        self, predictions: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Get multiple track predictions in a single request.
+
+        Uses the IMT Track Prediction API for batch predictions.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = "https://imt.ryanwallace.cloud/chained-predictions"
+        data = {"predictions": predictions}
+
+        async with self.session.post(url, json=data) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
+    async def get_prediction_stats(
+        self, station_id: str, route_id: str
+    ) -> dict[str, Any]:
+        """Get prediction statistics for a station and route.
+
+        Returns accuracy metrics and performance data for track predictions.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = f"https://imt.ryanwallace.cloud/stats/{station_id}/{route_id}"
+
+        async with self.session.get(url) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
+    async def get_historical_assignments(
+        self, station_id: str, route_id: str, days: int = 30
+    ) -> dict[str, Any]:
+        """Get historical track assignments for analysis.
+
+        Returns historical data showing actual track assignments for analysis.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = f"https://imt.ryanwallace.cloud/historical/{station_id}/{route_id}"
+        params = {"days": days}
+
+        async with self.session.get(url, params=params) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
     async def get_services(
         self, service_id: str | None = None, page_limit: int = 10
     ) -> dict[str, Any]:

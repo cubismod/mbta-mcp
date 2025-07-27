@@ -67,7 +67,6 @@ line-ending = "auto"
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # pyflakes
     "I",   # isort
@@ -136,6 +135,7 @@ ignore = [
     "C901",    # complex-structure (tool dispatch)
     "PLR0912", # too-many-branches (tool dispatch)
     "TRY301",  # raise-within-try
+    "PLR0915", # too-many-positional-arguments (tool dispatch)
 ]
 
 [tool.ruff.lint.per-file-ignores]

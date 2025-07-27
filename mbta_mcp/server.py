@@ -33,7 +33,7 @@ server: Server = Server("mbta-mcp")  # type: ignore[type-arg]
 async def handle_list_tools() -> list[types.Tool]:
     """List available tools."""
     logger.info("Client requested list of available tools")
-    tool_count = 14  # We have 14 MBTA tools
+    tool_count = 20  # We have 20 MBTA tools
     logger.info("Returning %d MBTA API tools", tool_count)
     return [
         types.Tool(
@@ -48,7 +48,7 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                     "route_type": {
                         "type": "integer",
-                        "description": "Filter by route type (0=Light Rail, 1=Subway, 2=Commuter Rail, 3=Bus, 4=Ferry)",  # noqa: E501
+                        "description": "Filter by route type (0=Light Rail, 1=Subway, 2=Commuter Rail, 3=Bus, 4=Ferry)",
                     },
                     "page_limit": {
                         "type": "integer",
@@ -282,7 +282,7 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                     "facility_type": {
                         "type": "string",
-                        "description": "Filter by facility type (ELEVATOR, ESCALATOR, PARKING_AREA, etc.)",  # noqa: E501
+                        "description": "Filter by facility type (ELEVATOR, ESCALATOR, PARKING_AREA, etc.)",
                     },
                     "page_limit": {
                         "type": "integer",
@@ -394,6 +394,147 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                 },
                 "required": ["stop_id"],
+            },
+        ),
+        types.Tool(
+            name="mbta_get_vehicle_positions",
+            description=(
+                "Get real-time vehicle positions from external API. Returns GeoJSON "
+                "data with vehicle locations, routes, status, and other real-time "
+                "information."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+        types.Tool(
+            name="mbta_get_external_alerts",
+            description=(
+                "Get general alerts from external API. Returns real-time service "
+                "alerts, delays, disruptions, and other service information."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+        types.Tool(
+            name="mbta_get_track_prediction",
+            description=(
+                "Get track prediction for a specific trip using IMT API. "
+                "Predicts which track a train will use at a station."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "station_id": {
+                        "type": "string",
+                        "description": "Station ID where prediction is needed",
+                    },
+                    "route_id": {
+                        "type": "string",
+                        "description": "Route ID (e.g., CR-Providence)",
+                    },
+                    "trip_id": {
+                        "type": "string",
+                        "description": "Trip ID for the specific train",
+                    },
+                    "headsign": {
+                        "type": "string",
+                        "description": "Destination/headsign (e.g., South Station)",
+                    },
+                    "direction_id": {
+                        "type": "integer",
+                        "description": "Direction (0 or 1)",
+                    },
+                    "scheduled_time": {
+                        "type": "string",
+                        "description": "Scheduled departure/arrival time (ISO format)",
+                    },
+                },
+                "required": [
+                    "station_id",
+                    "route_id",
+                    "trip_id",
+                    "headsign",
+                    "direction_id",
+                    "scheduled_time",
+                ],
+            },
+        ),
+        types.Tool(
+            name="mbta_get_chained_track_predictions",
+            description=(
+                "Get multiple track predictions in a single request using IMT API. "
+                "Useful for batch predictions of multiple trips."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "predictions": {
+                        "type": "array",
+                        "description": "Array of prediction requests",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "station_id": {"type": "string"},
+                                "route_id": {"type": "string"},
+                                "trip_id": {"type": "string"},
+                                "headsign": {"type": "string"},
+                                "direction_id": {"type": "integer"},
+                                "scheduled_time": {"type": "string"},
+                            },
+                        },
+                    },
+                },
+                "required": ["predictions"],
+            },
+        ),
+        types.Tool(
+            name="mbta_get_prediction_stats",
+            description=(
+                "Get prediction statistics and accuracy metrics for a station and route."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "station_id": {
+                        "type": "string",
+                        "description": "Station ID to get stats for",
+                    },
+                    "route_id": {
+                        "type": "string",
+                        "description": "Route ID to get stats for",
+                    },
+                },
+                "required": ["station_id", "route_id"],
+            },
+        ),
+        types.Tool(
+            name="mbta_get_historical_assignments",
+            description=(
+                "Get historical track assignments for analysis using IMT API. "
+                "Shows actual track assignments from past trips."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "station_id": {
+                        "type": "string",
+                        "description": "Station ID to get historical data for",
+                    },
+                    "route_id": {
+                        "type": "string",
+                        "description": "Route ID to get historical data for",
+                    },
+                    "days": {
+                        "type": "integer",
+                        "description": "Number of days to look back (default: 30)",
+                        "default": 30,
+                    },
+                },
+                "required": ["station_id", "route_id"],
             },
         ),
     ]
@@ -510,6 +651,34 @@ async def handle_call_tool(
                     route_id=arguments.get("route_id"),
                     direction_id=arguments.get("direction_id"),
                     page_limit=arguments.get("page_limit", 10),
+                )
+            elif name == "mbta_get_vehicle_positions":
+                result = await client.get_vehicle_positions()
+            elif name == "mbta_get_external_alerts":
+                result = await client.get_external_alerts()
+            elif name == "mbta_get_track_prediction":
+                result = await client.get_track_prediction(
+                    station_id=arguments["station_id"],
+                    route_id=arguments["route_id"],
+                    trip_id=arguments["trip_id"],
+                    headsign=arguments["headsign"],
+                    direction_id=arguments["direction_id"],
+                    scheduled_time=arguments["scheduled_time"],
+                )
+            elif name == "mbta_get_chained_track_predictions":
+                result = await client.get_chained_track_predictions(
+                    predictions=arguments["predictions"]
+                )
+            elif name == "mbta_get_prediction_stats":
+                result = await client.get_prediction_stats(
+                    station_id=arguments["station_id"],
+                    route_id=arguments["route_id"],
+                )
+            elif name == "mbta_get_historical_assignments":
+                result = await client.get_historical_assignments(
+                    station_id=arguments["station_id"],
+                    route_id=arguments["route_id"],
+                    days=arguments.get("days", 30),
                 )
             else:
                 raise ValueError(f"Unknown tool: {name}")
