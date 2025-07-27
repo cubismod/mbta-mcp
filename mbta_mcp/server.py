@@ -589,6 +589,7 @@ async def handle_call_tool(
         logger.info("Initializing MBTA client for %s", name)
         client: ExtendedMBTAClient
         async with ExtendedMBTAClient() as client:
+            result: Any
             if name == "mbta_get_routes":
                 result = await client.get_routes(
                     route_id=arguments.get("route_id"),

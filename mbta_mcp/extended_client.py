@@ -140,7 +140,7 @@ class ExtendedMBTAClient(MBTAClient):
             result: dict[str, Any] = await response.json()
             return result
 
-    async def get_amtrak_trains(self) -> dict[str, Any]:
+    async def get_amtrak_trains(self) -> list[dict[str, Any]]:
         """Get all tracked Amtrak trains from the Boston Amtrak Tracker API.
 
         Fetches real-time Amtrak train data from https://bos.ryanwallace.cloud/
@@ -155,7 +155,7 @@ class ExtendedMBTAClient(MBTAClient):
 
         async with self.session.get(url) as response:
             response.raise_for_status()
-            result: dict[str, Any] = await response.json()
+            result: list[dict[str, Any]] = await response.json()
             return result
 
     async def get_amtrak_trains_geojson(self) -> dict[str, Any]:

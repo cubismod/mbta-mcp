@@ -73,7 +73,9 @@ mbta-mcp
 
 ## Usage
 
-Run the MCP server:
+### MCP Server (for AI clients)
+
+Run the MCP server for use with AI clients like Claude Desktop:
 
 ```bash
 # Direct run (no installation needed)
@@ -84,6 +86,27 @@ mbta-mcp
 
 # If using development setup
 uv run mbta-mcp
+```
+
+### CLI Interface (for direct usage)
+
+For direct command-line access to MBTA and Amtrak data:
+
+```bash
+# Show available commands
+uv run mbta-cli --help
+
+# Get Amtrak trains
+uv run mbta-cli trains --limit 5
+
+# Get Amtrak trains in JSON format
+uv run mbta-cli trains --json --limit 3
+
+# Test MBTA routes
+uv run mbta-cli routes
+
+# Show available MCP tools
+uv run mbta-cli tools
 ```
 
 ### Available Tools
