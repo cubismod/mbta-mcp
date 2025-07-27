@@ -1,10 +1,20 @@
 """MBTA V3 API client."""
 
+import logging
 import os
 from typing import Any
 from urllib.parse import urljoin
 
 import aiohttp
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class MBTAClient:
@@ -36,10 +46,19 @@ class MBTAClient:
             headers["X-API-Key"] = self.api_key
         return headers
 
+    @retry(
+        wait=wait_exponential_jitter(initial=1, max=60, jitter=2),
+        stop=stop_after_attempt(3),
+        retry=retry_if_exception_type(
+            (aiohttp.ClientError, aiohttp.ClientResponseError)
+        ),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
     async def _request(
         self, endpoint: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Make a request to the MBTA API."""
+        """Make a request to the MBTA API with retry logic."""
         if not self.base_url:
             raise ValueError("Base URL is required")
         if not self.session:
