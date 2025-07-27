@@ -38,7 +38,7 @@ jobs:
       run: uv run mypy mbta_mcp/
     
     - name: Check formatting
-      run: uv run ruff format --check mbta_mcp/
+      run: uv run ruff format --check mbta_mcp/ --exclude=_version.py
     
     - name: Run codespell
       run: uv run codespell
