@@ -1,6 +1,6 @@
 """Extended MBTA V3 API client with comprehensive endpoint coverage."""
 
-from typing import Any
+from typing import Any, cast
 
 from .client import MBTAClient
 
@@ -18,7 +18,7 @@ class ExtendedMBTAClient(MBTAClient):
         """Get service definitions."""
         endpoint = f"/services/{service_id}" if service_id else "/services"
         params: dict[str, Any] = {"page[limit]": page_limit}
-        return await self._request(endpoint, params)
+        return cast("dict[str, Any]", await self._request(endpoint, params))
 
     async def get_shapes(
         self,
@@ -31,7 +31,7 @@ class ExtendedMBTAClient(MBTAClient):
         params: dict[str, Any] = {"page[limit]": page_limit}
         if route_id:
             params["filter[route]"] = route_id
-        return await self._request(endpoint, params)
+        return cast("dict[str, Any]", await self._request(endpoint, params))
 
     async def get_facilities(
         self,
@@ -47,7 +47,7 @@ class ExtendedMBTAClient(MBTAClient):
             params["filter[stop]"] = stop_id
         if facility_type:
             params["filter[type]"] = facility_type
-        return await self._request(endpoint, params)
+        return cast("dict[str, Any]", await self._request(endpoint, params))
 
     async def get_live_facilities(
         self, facility_id: str | None = None, page_limit: int = 10
@@ -57,7 +57,7 @@ class ExtendedMBTAClient(MBTAClient):
             f"/live_facilities/{facility_id}" if facility_id else "/live_facilities"
         )
         params: dict[str, Any] = {"page[limit]": page_limit}
-        return await self._request(endpoint, params)
+        return cast("dict[str, Any]", await self._request(endpoint, params))
 
     async def get_lines(
         self, line_id: str | None = None, page_limit: int = 10
@@ -65,7 +65,7 @@ class ExtendedMBTAClient(MBTAClient):
         """Get line information."""
         endpoint = f"/lines/{line_id}" if line_id else "/lines"
         params: dict[str, Any] = {"page[limit]": page_limit}
-        return await self._request(endpoint, params)
+        return cast("dict[str, Any]", await self._request(endpoint, params))
 
     async def get_route_patterns(
         self,
@@ -85,7 +85,7 @@ class ExtendedMBTAClient(MBTAClient):
             params["filter[route]"] = route_id
         if direction_id is not None:
             params["filter[direction_id]"] = direction_id
-        return await self._request(endpoint, params)
+        return cast("dict[str, Any]", await self._request(endpoint, params))
 
     async def search_stops(
         self,
@@ -95,14 +95,38 @@ class ExtendedMBTAClient(MBTAClient):
         radius: float | None = None,
         page_limit: int = 10,
     ) -> dict[str, Any]:
-        """Search for stops by name or location."""
-        params: dict[str, Any] = {"page[limit]": page_limit, "filter[name]": query}
+        """Search for stops by name or location.
+
+        Note: MBTA API doesn't support text search filters.
+        This method fetches stops and filters by name client-side.
+        For better performance, also provide latitude/longitude.
+        """
+        # Fetch more to filter client-side
+        params: dict[str, Any] = {"page[limit]": min(page_limit * 10, 100)}
+
+        # If location provided, use it to narrow results
         if latitude is not None and longitude is not None:
             params["filter[latitude]"] = latitude
             params["filter[longitude]"] = longitude
             if radius is not None:
                 params["filter[radius]"] = radius
-        return await self._request("/stops", params)
+
+        # Get stops from API
+        result = cast("dict[str, Any]", await self._request("/stops", params))
+
+        # Filter by name client-side
+        if "data" in result and query:
+            query_lower = query.lower()
+            filtered_data = []
+            for stop in result["data"]:
+                name = stop.get("attributes", {}).get("name", "").lower()
+                if name.find(query_lower) >= 0:
+                    filtered_data.append(stop)
+                    if len(filtered_data) >= page_limit:
+                        break
+            result["data"] = filtered_data
+
+        return result
 
     async def get_nearby_stops(
         self,
@@ -118,7 +142,7 @@ class ExtendedMBTAClient(MBTAClient):
             "filter[longitude]": longitude,
             "filter[radius]": radius,
         }
-        return await self._request("/stops", params)
+        return cast("dict[str, Any]", await self._request("/stops", params))
 
     async def get_predictions_for_stop(
         self,
@@ -133,7 +157,7 @@ class ExtendedMBTAClient(MBTAClient):
             params["filter[route]"] = route_id
         if direction_id is not None:
             params["filter[direction_id]"] = direction_id
-        return await self._request("/predictions", params)
+        return cast("dict[str, Any]", await self._request("/predictions", params))
 
     async def get_schedule_for_stop(
         self,
@@ -154,7 +178,7 @@ class ExtendedMBTAClient(MBTAClient):
             params["filter[min_time]"] = min_time
         if max_time:
             params["filter[max_time]"] = max_time
-        return await self._request("/schedules", params)
+        return cast("dict[str, Any]", await self._request("/schedules", params))
 
     async def get_alerts_for_stop(
         self, stop_id: str, severity: int | None = None, page_limit: int = 10
@@ -163,7 +187,7 @@ class ExtendedMBTAClient(MBTAClient):
         params: dict[str, Any] = {"page[limit]": page_limit, "filter[stop]": stop_id}
         if severity is not None:
             params["filter[severity]"] = severity
-        return await self._request("/alerts", params)
+        return cast("dict[str, Any]", await self._request("/alerts", params))
 
     async def get_alerts_for_route(
         self, route_id: str, severity: int | None = None, page_limit: int = 10
@@ -172,7 +196,7 @@ class ExtendedMBTAClient(MBTAClient):
         params: dict[str, Any] = {"page[limit]": page_limit, "filter[route]": route_id}
         if severity is not None:
             params["filter[severity]"] = severity
-        return await self._request("/alerts", params)
+        return cast("dict[str, Any]", await self._request("/alerts", params))
 
     async def get_vehicles_for_route(
         self, route_id: str, direction_id: int | None = None, page_limit: int = 10
@@ -181,7 +205,7 @@ class ExtendedMBTAClient(MBTAClient):
         params: dict[str, Any] = {"page[limit]": page_limit, "filter[route]": route_id}
         if direction_id is not None:
             params["filter[direction_id]"] = direction_id
-        return await self._request("/vehicles", params)
+        return cast("dict[str, Any]", await self._request("/vehicles", params))
 
     async def get_trip_details(
         self,
@@ -201,7 +225,7 @@ class ExtendedMBTAClient(MBTAClient):
             includes.append("vehicle")
         if includes:
             params["include"] = ",".join(includes)
-        return await self._request(f"/trips/{trip_id}", params)
+        return cast("dict[str, Any]", await self._request(f"/trips/{trip_id}", params))
 
     async def get_route_with_stops(
         self, route_id: str, direction_id: int | None = None
@@ -210,4 +234,4 @@ class ExtendedMBTAClient(MBTAClient):
         params: dict[str, Any] = {"include": "stops"}
         if direction_id is not None:
             params["filter[direction_id]"] = direction_id
-        return await self._request(f"/routes/{route_id}", params)
+        return cast("dict[str, Any]", await self._request(f"/routes/{route_id}", params))
