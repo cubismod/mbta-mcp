@@ -33,7 +33,7 @@ server: Server = Server("mbta-mcp")  # type: ignore[type-arg]
 async def handle_list_tools() -> list[types.Tool]:
     """List available tools."""
     logger.info("Client requested list of available tools")
-    tool_count = 20  # We have 20 MBTA tools
+    tool_count = 23  # We have 23 MBTA tools (including 3 new Amtrak tools)
     logger.info("Returning %d MBTA API tools", tool_count)
     return [
         types.Tool(
@@ -537,6 +537,39 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["station_id", "route_id"],
             },
         ),
+        types.Tool(
+            name="mbta_get_amtrak_trains",
+            description=(
+                "Get all tracked Amtrak trains from the Boston Amtrak Tracker API. "
+                "Returns real-time train locations, routes, status, and other information."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+        types.Tool(
+            name="mbta_get_amtrak_trains_geojson",
+            description=(
+                "Get Amtrak trains as GeoJSON for mapping applications. "
+                "Returns train data formatted as GeoJSON suitable for mapping."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+        types.Tool(
+            name="mbta_get_amtrak_health_status",
+            description=(
+                "Get health status of the Boston Amtrak Tracker API. "
+                "Returns server health status and last data update time."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
     ]
 
 
@@ -680,6 +713,12 @@ async def handle_call_tool(
                     route_id=arguments["route_id"],
                     days=arguments.get("days", 30),
                 )
+            elif name == "mbta_get_amtrak_trains":
+                result = await client.get_amtrak_trains()
+            elif name == "mbta_get_amtrak_trains_geojson":
+                result = await client.get_amtrak_trains_geojson()
+            elif name == "mbta_get_amtrak_health_status":
+                result = await client.get_amtrak_health_status()
             else:
                 raise ValueError(f"Unknown tool: {name}")
 

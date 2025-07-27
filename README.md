@@ -113,6 +113,12 @@ uv run mbta-mcp
 - `mbta_get_vehicle_positions` - Get real-time vehicle positions from external API (GeoJSON format)
 - `mbta_get_external_alerts` - Get general alerts from external API (delays, disruptions, service info)
 
+**Boston Amtrak Tracker API:**
+
+- `mbta_get_amtrak_trains` - Get all tracked Amtrak trains from Boston Amtrak Tracker API
+- `mbta_get_amtrak_trains_geojson` - Get Amtrak trains as GeoJSON for mapping applications
+- `mbta_get_amtrak_health_status` - Get health status of the Boston Amtrak Tracker API
+
 **IMT Track Prediction API:**
 
 - `mbta_get_track_prediction` - Predict which track a train will use at a station
@@ -226,6 +232,29 @@ Get general alerts from external API including delays, disruptions, and service 
 
 - **Parameters:** None
 - **Returns:** JSON with alert details, severity levels, affected routes/stops, and active periods
+
+### Boston Amtrak Tracker API Tools
+
+#### `mbta_get_amtrak_trains`
+
+Get all tracked Amtrak trains from the Boston Amtrak Tracker API.
+
+- **Parameters:** None
+- **Returns:** JSON with real-time Amtrak train locations, routes, status, speed, and other information
+
+#### `mbta_get_amtrak_trains_geojson`
+
+Get Amtrak trains as GeoJSON for mapping applications.
+
+- **Parameters:** None
+- **Returns:** GeoJSON feature collection with train locations suitable for mapping
+
+#### `mbta_get_amtrak_health_status`
+
+Get health status of the Boston Amtrak Tracker API.
+
+- **Parameters:** None
+- **Returns:** JSON with server health status and last data update time
 
 ### IMT Track Prediction API Tools
 
@@ -492,6 +521,9 @@ Once connected, you can ask your LLM questions like:
 - "Predict which track the 3:30 PM Providence train will use at South Station"
 - "Show me track prediction accuracy statistics for South Station"
 - "Get historical track assignments for the last 30 days"
+- "Get all current Amtrak trains in the Boston area"
+- "Show me Amtrak trains as GeoJSON for mapping"
+- "Check the health status of the Amtrak tracker API"
 
 ### Troubleshooting
 
@@ -544,6 +576,13 @@ This MCP server integrates with additional external APIs to provide enhanced fun
 - **Format:** JSON with machine learning-powered track predictions
 - **No authentication required**
 - **Data:** Track predictions, confidence scores, historical assignments, accuracy metrics
+
+### Boston Amtrak Tracker API
+
+- **Endpoint:** <https://bos.ryanwallace.cloud/>
+- **Format:** JSON and GeoJSON with real-time Amtrak train tracking
+- **No authentication required**
+- **Data:** Train locations, routes, status, speed, and health information
 
 ## Development
 

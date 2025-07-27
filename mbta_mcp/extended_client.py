@@ -140,6 +140,59 @@ class ExtendedMBTAClient(MBTAClient):
             result: dict[str, Any] = await response.json()
             return result
 
+    async def get_amtrak_trains(self) -> dict[str, Any]:
+        """Get all tracked Amtrak trains from the Boston Amtrak Tracker API.
+
+        Fetches real-time Amtrak train data from https://bos.ryanwallace.cloud/
+        which provides train locations, routes, status, and other information.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = "https://bos.ryanwallace.cloud/trains"
+
+        async with self.session.get(url) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
+    async def get_amtrak_trains_geojson(self) -> dict[str, Any]:
+        """Get Amtrak trains as GeoJSON for mapping applications.
+
+        Fetches Amtrak train data formatted as GeoJSON from https://bos.ryanwallace.cloud/
+        which provides train locations in a format suitable for mapping.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = "https://bos.ryanwallace.cloud/trains/geojson"
+
+        async with self.session.get(url) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
+    async def get_amtrak_health_status(self) -> dict[str, Any]:
+        """Get health status of the Boston Amtrak Tracker API.
+
+        Returns server health status and last data update time.
+        """
+        if not self.session:
+            raise RuntimeError(
+                "Client session not initialized. Use 'async with' context."
+            )
+
+        url = "https://bos.ryanwallace.cloud/health"
+
+        async with self.session.get(url) as response:
+            response.raise_for_status()
+            result: dict[str, Any] = await response.json()
+            return result
+
     async def get_services(
         self, service_id: str | None = None, page_limit: int = 10
     ) -> dict[str, Any]:
