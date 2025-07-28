@@ -339,10 +339,10 @@ class ExtendedMBTAClient(MBTAClient):
         radius: float | None = None,
         page_limit: int = 10,
     ) -> dict[str, Any]:
-        """Search for stops by name or location.
+        """Search for stops by name or location using fuzzy matching.
 
         Note: MBTA API doesn't support text search filters.
-        This method fetches stops and filters by name client-side.
+        This method fetches stops and filters by name client-side using fuzzy matching.
         For better performance, also provide latitude/longitude.
         """
         # Fetch more to filter client-side
@@ -358,16 +358,12 @@ class ExtendedMBTAClient(MBTAClient):
         # Get stops from API
         result = await self._request("/stops", params)
 
-        # Filter by name client-side
+        # Filter by name client-side using fuzzy matching
         if "data" in result and query:
-            query_lower = query.lower()
-            filtered_data = []
-            for stop in result["data"]:
-                name = stop.get("attributes", {}).get("name", "").lower()
-                if name.find(query_lower) >= 0:
-                    filtered_data.append(stop)
-                    if len(filtered_data) >= page_limit:
-                        break
+            search_fields = ["attributes.name", "attributes.description", "id"]
+            filtered_data = filter_data_fuzzy(
+                result["data"], query, search_fields, page_limit
+            )
             result["data"] = filtered_data
 
         return result
