@@ -33,9 +33,7 @@ server: Server = Server("mbta-mcp")  # type: ignore[type-arg]
 async def handle_list_tools() -> list[types.Tool]:
     """List available tools."""
     logger.info("Client requested list of available tools")
-    tool_count = (
-        29  # We have 29 MBTA tools (including 3 Amtrak tools + 6 list_all tools)
-    )
+    tool_count = 30  # We have 30 MBTA tools (including 3 Amtrak tools + 6 list_all tools + 1 time-based schedule tool)
     logger.info("Returning %d MBTA API tools", tool_count)
     return [
         types.Tool(
@@ -698,6 +696,51 @@ async def handle_list_tools() -> list[types.Tool]:
                 },
             },
         ),
+        types.Tool(
+            name="mbta_get_schedules_by_time",
+            description=(
+                "Get MBTA schedules filtered by specific times and dates. "
+                "Use this to find transit schedules for particular time windows, dates, or specific trips."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "description": "Filter by service date (YYYY-MM-DD format)",
+                    },
+                    "min_time": {
+                        "type": "string",
+                        "description": "Filter schedules at or after this time (HH:MM format, use >24:00 for next day)",
+                    },
+                    "max_time": {
+                        "type": "string",
+                        "description": "Filter schedules at or before this time (HH:MM format)",
+                    },
+                    "route_id": {
+                        "type": "string",
+                        "description": "Filter by specific route ID",
+                    },
+                    "stop_id": {
+                        "type": "string",
+                        "description": "Filter by specific stop ID",
+                    },
+                    "trip_id": {
+                        "type": "string",
+                        "description": "Filter by specific trip ID",
+                    },
+                    "direction_id": {
+                        "type": "integer",
+                        "description": "Filter by direction (0 or 1)",
+                    },
+                    "page_limit": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 10)",
+                        "default": 10,
+                    },
+                },
+            },
+        ),
     ]
 
 
@@ -877,6 +920,17 @@ async def handle_call_tool(
                 result = await client.list_all_stops(
                     query=arguments.get("query"),
                     max_results=arguments.get("max_results", 50),
+                )
+            elif name == "mbta_get_schedules_by_time":
+                result = await client.get_schedules_by_time(
+                    date=arguments.get("date"),
+                    min_time=arguments.get("min_time"),
+                    max_time=arguments.get("max_time"),
+                    route_id=arguments.get("route_id"),
+                    stop_id=arguments.get("stop_id"),
+                    trip_id=arguments.get("trip_id"),
+                    direction_id=arguments.get("direction_id"),
+                    page_limit=arguments.get("page_limit", 10),
                 )
             else:
                 raise ValueError(f"Unknown tool: {name}")

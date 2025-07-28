@@ -587,3 +587,46 @@ class ExtendedMBTAClient(MBTAClient):
             result["data"] = result["data"][:max_results]
 
         return result
+
+    async def get_schedules_by_time(
+        self,
+        date: str | None = None,
+        min_time: str | None = None,
+        max_time: str | None = None,
+        route_id: str | None = None,
+        stop_id: str | None = None,
+        trip_id: str | None = None,
+        direction_id: int | None = None,
+        page_limit: int = 10,
+    ) -> dict[str, Any]:
+        """Get schedules filtered by specific times and dates.
+
+        Args:
+            date: Filter by service date (YYYY-MM-DD format).
+            min_time: Filter schedules at or after this time (HH:MM format).
+                     Use >24:00 for times after midnight (e.g., 25:30).
+            max_time: Filter schedules at or before this time (HH:MM format).
+            route_id: Filter by specific route.
+            stop_id: Filter by specific stop.
+            trip_id: Filter by specific trip.
+            direction_id: Filter by direction (0 or 1).
+            page_limit: Maximum number of results to return.
+        """
+        params: dict[str, Any] = {"page[limit]": page_limit}
+
+        if date:
+            params["filter[date]"] = date
+        if min_time:
+            params["filter[min_time]"] = min_time
+        if max_time:
+            params["filter[max_time]"] = max_time
+        if route_id:
+            params["filter[route]"] = route_id
+        if stop_id:
+            params["filter[stop]"] = stop_id
+        if trip_id:
+            params["filter[trip]"] = trip_id
+        if direction_id is not None:
+            params["filter[direction_id]"] = direction_id
+
+        return await self._request("/schedules", params)
