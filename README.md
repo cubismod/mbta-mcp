@@ -1,10 +1,8 @@
 # MBTA MCP Server
 
-![PyPI - Version](https://img.shields.io/pypi/v/mbta-mcp)
+![PyPI - Version](https://img.shields.io/pypi/v/mbta-mcp?link=https%3A%2F%2Fpypi.org%2Fproject%2Fmbta-mcp%2F)
 
 An MCP (Model Context Protocol) server for the MBTA V3 API, providing access to Boston's public transit data.
-
-*[PyPi](https://pypi.org/project/mbta-mcp/)*
 
 ## Features
 
