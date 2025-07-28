@@ -3,6 +3,9 @@ version: '3'
 vars:
   PYTHON_FILES: "mbta_mcp/"
 
+dotenv:
+  - .env
+
 tasks:
   install:
     desc: Install dependencies
@@ -81,3 +84,7 @@ tasks:
     desc: Show available tasks
     cmds:
       - task --list
+
+  mcpo:
+    cmds:
+      - uvx mcpo --port 8000 -- uv tool run mbta-mcp
