@@ -14,6 +14,7 @@ An MCP (Model Context Protocol) server for the MBTA V3 API, providing access to 
 - **External APIs**: Vehicle positions and alerts from external sources
 - **Track Predictions**: Machine learning-powered track assignment predictions
 - **Historical Data**: Access to historical track assignments and performance metrics
+- **Caching**: Memory-based caching with configurable TTL for improved performance
 
 ## Installation
 
@@ -607,6 +608,18 @@ This MCP server integrates with additional external APIs to provide enhanced fun
 - **No authentication required**
 - **Data:** Train locations, routes, status, speed, and health information
 
+
+### TTL Configuration
+
+Different endpoint types have different default cache times:
+
+- **Static data** (routes, stops): 1 hour
+- **Semi-dynamic data** (schedules, trips): 5 minutes  
+- **Real-time data** (predictions, alerts): 30 seconds - 2 minutes
+- **External APIs**: 30 seconds - 1 hour
+
+For detailed caching documentation, see [CACHING.md](CACHING.md).
+
 ## Development
 
 This project uses [Task](https://taskfile.dev/) for build automation. Install it and run:
@@ -647,6 +660,7 @@ task typecheck  # or: uv run mypy mbta_mcp/
 mbta-mcp/
 ├── mbta_mcp/
 │   ├── __init__.py         # Package initialization
+│   ├── cache.py           # Memory-based caching implementation
 │   ├── client.py          # Core MBTA API client
 │   ├── extended_client.py # Extended client with all endpoints
 │   └── server.py          # MCP server implementation
@@ -654,6 +668,7 @@ mbta-mcp/
 ├── .tool-versions         # asdf tool versions (Python 3.13)
 ├── Taskfile.yml          # Build automation tasks
 ├── pyproject.toml        # Project configuration and dependencies
+├── test_cache.py         # Cache functionality tests
 ├── test_server.py        # Server functionality tests
 └── README.md             # This file
 ```
@@ -663,5 +678,6 @@ mbta-mcp/
 - `mbta_mcp/server.py` - Main MCP server with 20 transit tools
 - `mbta_mcp/client.py` - Async HTTP client for MBTA V3 API (using aiohttp)
 - `mbta_mcp/extended_client.py` - Extended client with external APIs and IMT track predictions
+- `mbta_mcp/cache.py` - Memory-based caching implementation using cachetools
 - `Taskfile.yml` - Development commands and automation
 - `.env.example` - Configuration template

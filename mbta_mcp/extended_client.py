@@ -1,8 +1,12 @@
 """Extended MBTA V3 API client with comprehensive endpoint coverage."""
 
+import logging
 from typing import Any
 
+from .cache import get_ttl_for_endpoint
 from .client import MBTAClient
+
+logger = logging.getLogger(__name__)
 
 
 class ExtendedMBTAClient(MBTAClient):
@@ -23,11 +27,23 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
+        # Check cache first
+        if self.cache:
+            cached_result = self.cache.get("vehicle_positions")
+            if cached_result is not None:
+                return cached_result  # type: ignore[no-any-return]
+
         url = "https://vehicles.ryanwallace.cloud/"
 
         async with self.session.get(url) as response:
             response.raise_for_status()
             result: dict[str, Any] = await response.json()
+
+            # Cache the result
+            if self.cache:
+                ttl = get_ttl_for_endpoint("vehicle_positions")
+                self.cache.set("vehicle_positions", result, ttl)
+
             return result
 
     async def get_external_alerts(self) -> dict[str, Any]:
@@ -41,11 +57,23 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
+        # Check cache first
+        if self.cache:
+            cached_result = self.cache.get("external_alerts")
+            if cached_result is not None:
+                return cached_result  # type: ignore[no-any-return]
+
         url = "https://vehicles.ryanwallace.cloud/alerts"
 
         async with self.session.get(url) as response:
             response.raise_for_status()
             result: dict[str, Any] = await response.json()
+
+            # Cache the result
+            if self.cache:
+                ttl = get_ttl_for_endpoint("external_alerts")
+                self.cache.set("external_alerts", result, ttl)
+
             return result
 
     async def get_track_prediction(
@@ -66,6 +94,22 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
+        # Create cache key for this specific prediction
+        cache_params = {
+            "station_id": station_id,
+            "route_id": route_id,
+            "trip_id": trip_id,
+            "headsign": headsign,
+            "direction_id": direction_id,
+            "scheduled_time": scheduled_time,
+        }
+
+        # Check cache first
+        if self.cache:
+            cached_result = self.cache.get("track_prediction", cache_params)
+            if cached_result is not None:
+                return cached_result  # type: ignore[no-any-return]
+
         url = "https://imt.ryanwallace.cloud/predictions"
         params = {
             "station_id": station_id,
@@ -79,6 +123,12 @@ class ExtendedMBTAClient(MBTAClient):
         async with self.session.post(url, params=params) as response:
             response.raise_for_status()
             result: dict[str, Any] = await response.json()
+
+            # Cache the result
+            if self.cache:
+                ttl = get_ttl_for_endpoint("track_prediction")
+                self.cache.set("track_prediction", result, ttl, cache_params)
+
             return result
 
     async def get_chained_track_predictions(
@@ -151,11 +201,23 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
+        # Check cache first
+        if self.cache:
+            cached_result = self.cache.get("amtrak_trains")
+            if cached_result is not None:
+                return cached_result  # type: ignore[no-any-return]
+
         url = "https://bos.ryanwallace.cloud/trains"
 
         async with self.session.get(url) as response:
             response.raise_for_status()
             result: list[dict[str, Any]] = await response.json()
+
+            # Cache the result
+            if self.cache:
+                ttl = get_ttl_for_endpoint("amtrak_trains")
+                self.cache.set("amtrak_trains", result, ttl)
+
             return result
 
     async def get_amtrak_trains_geojson(self) -> dict[str, Any]:
