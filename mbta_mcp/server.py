@@ -33,7 +33,9 @@ server: Server = Server("mbta-mcp")  # type: ignore[type-arg]
 async def handle_list_tools() -> list[types.Tool]:
     """List available tools."""
     logger.info("Client requested list of available tools")
-    tool_count = 23  # We have 23 MBTA tools (including 3 new Amtrak tools)
+    tool_count = (
+        29  # We have 29 MBTA tools (including 3 Amtrak tools + 6 list_all tools)
+    )
     logger.info("Returning %d MBTA API tools", tool_count)
     return [
         types.Tool(
@@ -570,6 +572,132 @@ async def handle_list_tools() -> list[types.Tool]:
                 "properties": {},
             },
         ),
+        types.Tool(
+            name="mbta_list_all_alerts",
+            description=(
+                "List all MBTA alerts with optional fuzzy filtering. "
+                "Returns all alerts without specific filters, with client-side fuzzy search."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Optional fuzzy search query to filter alerts by header or description",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 50)",
+                        "default": 50,
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="mbta_list_all_facilities",
+            description=(
+                "List all MBTA facilities with optional fuzzy filtering. "
+                "Returns all facilities without specific filters, with client-side fuzzy search."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Optional fuzzy search query to filter facilities by name",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 50)",
+                        "default": 50,
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="mbta_list_all_lines",
+            description=(
+                "List all MBTA lines with optional fuzzy filtering. "
+                "Returns all lines without specific filters, with client-side fuzzy search."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Optional fuzzy search query to filter lines by name",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 50)",
+                        "default": 50,
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="mbta_list_all_routes",
+            description=(
+                "List all MBTA routes with optional fuzzy filtering. "
+                "Returns all routes without specific filters, with client-side fuzzy search."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Optional fuzzy search query to filter routes by name",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 50)",
+                        "default": 50,
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="mbta_list_all_services",
+            description=(
+                "List all MBTA services with optional fuzzy filtering. "
+                "Returns all services without specific filters, with client-side fuzzy search."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Optional fuzzy search query to filter services by description",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 50)",
+                        "default": 50,
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="mbta_list_all_stops",
+            description=(
+                "List all MBTA stops with optional fuzzy filtering. "
+                "Returns all stops without specific filters, with client-side fuzzy search."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Optional fuzzy search query to filter stops by name",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return (default: 50)",
+                        "default": 50,
+                    },
+                },
+            },
+        ),
     ]
 
 
@@ -720,6 +848,36 @@ async def handle_call_tool(
                 result = await client.get_amtrak_trains_geojson()
             elif name == "mbta_get_amtrak_health_status":
                 result = await client.get_amtrak_health_status()
+            elif name == "mbta_list_all_alerts":
+                result = await client.list_all_alerts(
+                    query=arguments.get("query"),
+                    max_results=arguments.get("max_results", 50),
+                )
+            elif name == "mbta_list_all_facilities":
+                result = await client.list_all_facilities(
+                    query=arguments.get("query"),
+                    max_results=arguments.get("max_results", 50),
+                )
+            elif name == "mbta_list_all_lines":
+                result = await client.list_all_lines(
+                    query=arguments.get("query"),
+                    max_results=arguments.get("max_results", 50),
+                )
+            elif name == "mbta_list_all_routes":
+                result = await client.list_all_routes(
+                    query=arguments.get("query"),
+                    max_results=arguments.get("max_results", 50),
+                )
+            elif name == "mbta_list_all_services":
+                result = await client.list_all_services(
+                    query=arguments.get("query"),
+                    max_results=arguments.get("max_results", 50),
+                )
+            elif name == "mbta_list_all_stops":
+                result = await client.list_all_stops(
+                    query=arguments.get("query"),
+                    max_results=arguments.get("max_results", 50),
+                )
             else:
                 raise ValueError(f"Unknown tool: {name}")
 

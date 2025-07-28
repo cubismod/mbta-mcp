@@ -5,6 +5,7 @@ from typing import Any
 
 from .cache import get_ttl_for_endpoint
 from .client import MBTAClient
+from .fuzzy_filter import filter_data_fuzzy
 
 logger = logging.getLogger(__name__)
 
@@ -478,3 +479,111 @@ class ExtendedMBTAClient(MBTAClient):
         if direction_id is not None:
             params["filter[direction_id]"] = direction_id
         return await self._request(f"/routes/{route_id}", params)
+
+    async def list_all_alerts(
+        self, query: str | None = None, max_results: int = 50
+    ) -> dict[str, Any]:
+        """List all alerts with optional fuzzy filtering."""
+        # Fetch maximum number of alerts to filter client-side
+        result = await self._request("/alerts", {"page[limit]": 100})
+
+        if query and "data" in result:
+            search_fields = ["attributes.header", "attributes.description", "id"]
+            filtered_data = filter_data_fuzzy(
+                result["data"], query, search_fields, max_results
+            )
+            result["data"] = filtered_data
+        elif "data" in result:
+            result["data"] = result["data"][:max_results]
+
+        return result
+
+    async def list_all_facilities(
+        self, query: str | None = None, max_results: int = 50
+    ) -> dict[str, Any]:
+        """List all facilities with optional fuzzy filtering."""
+        # Fetch maximum number of facilities to filter client-side
+        result = await self._request("/facilities", {"page[limit]": 100})
+
+        if query and "data" in result:
+            search_fields = ["attributes.short_name", "attributes.long_name", "id"]
+            filtered_data = filter_data_fuzzy(
+                result["data"], query, search_fields, max_results
+            )
+            result["data"] = filtered_data
+        elif "data" in result:
+            result["data"] = result["data"][:max_results]
+
+        return result
+
+    async def list_all_lines(
+        self, query: str | None = None, max_results: int = 50
+    ) -> dict[str, Any]:
+        """List all lines with optional fuzzy filtering."""
+        # Fetch maximum number of lines to filter client-side
+        result = await self._request("/lines", {"page[limit]": 100})
+
+        if query and "data" in result:
+            search_fields = ["attributes.short_name", "attributes.long_name", "id"]
+            filtered_data = filter_data_fuzzy(
+                result["data"], query, search_fields, max_results
+            )
+            result["data"] = filtered_data
+        elif "data" in result:
+            result["data"] = result["data"][:max_results]
+
+        return result
+
+    async def list_all_routes(
+        self, query: str | None = None, max_results: int = 50
+    ) -> dict[str, Any]:
+        """List all routes with optional fuzzy filtering."""
+        # Fetch maximum number of routes to filter client-side
+        result = await self._request("/routes", {"page[limit]": 100})
+
+        if query and "data" in result:
+            search_fields = ["attributes.short_name", "attributes.long_name", "id"]
+            filtered_data = filter_data_fuzzy(
+                result["data"], query, search_fields, max_results
+            )
+            result["data"] = filtered_data
+        elif "data" in result:
+            result["data"] = result["data"][:max_results]
+
+        return result
+
+    async def list_all_services(
+        self, query: str | None = None, max_results: int = 50
+    ) -> dict[str, Any]:
+        """List all services with optional fuzzy filtering."""
+        # Fetch maximum number of services to filter client-side
+        result = await self._request("/services", {"page[limit]": 100})
+
+        if query and "data" in result:
+            search_fields = ["attributes.description", "id"]
+            filtered_data = filter_data_fuzzy(
+                result["data"], query, search_fields, max_results
+            )
+            result["data"] = filtered_data
+        elif "data" in result:
+            result["data"] = result["data"][:max_results]
+
+        return result
+
+    async def list_all_stops(
+        self, query: str | None = None, max_results: int = 50
+    ) -> dict[str, Any]:
+        """List all stops with optional fuzzy filtering."""
+        # Fetch maximum number of stops to filter client-side
+        result = await self._request("/stops", {"page[limit]": 100})
+
+        if query and "data" in result:
+            search_fields = ["attributes.name", "attributes.description", "id"]
+            filtered_data = filter_data_fuzzy(
+                result["data"], query, search_fields, max_results
+            )
+            result["data"] = filtered_data
+        elif "data" in result:
+            result["data"] = result["data"][:max_results]
+
+        return result
