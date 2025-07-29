@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  PYTHON_FILES: "mbta_mcp/"
+  PYTHON_FILES: "mbta_mcp/ tests/"
 
 dotenv:
   - .env
@@ -65,7 +65,7 @@ tasks:
       - find . -name "*.pyo" -delete
 
   test-server:
-    desc: Test MCP server functionality
+    desc: Test MCP server functionality (legacy)
     cmds:
       - uv run python test_server.py
 
@@ -76,8 +76,8 @@ tasks:
       - task: install-dev
       - echo "Running code quality checks..."
       - task: check
-      - echo "Testing server functionality..."
-      - task: test-server
+      - echo "Running tests..."
+      - task: test
       - echo "✓ Project verification complete!"
 
   default:
