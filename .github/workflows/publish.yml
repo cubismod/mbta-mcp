@@ -45,19 +45,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Full history for version generation
-    - name: Install uv
-      uses: astral-sh/setup-uv@v4
-      with:
-        enable-cache: true
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-    
     - name: Download build artifacts
       uses: actions/download-artifact@v4
       with:
@@ -65,4 +52,6 @@ jobs:
         path: dist/
     
     - name: Publish to PyPI
-      run: uv publish --trusted-publishing always
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://pypi.org/project/mbta-mcp/
