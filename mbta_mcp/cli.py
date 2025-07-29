@@ -10,7 +10,7 @@ from .extended_client import ExtendedMBTAClient
 
 async def show_available_tools() -> None:
     """Show available MBTA tools."""
-    click.echo("🚇 MBTA MCP Server - Available Tools")
+    click.echo("MBTA MCP Server - Available Tools")
     click.echo("=" * 50)
 
     tools = [
@@ -31,22 +31,22 @@ async def show_available_tools() -> None:
         click.echo(f"    {description}")
         click.echo()
 
-    click.echo("💡 This tool is designed to run as an MCP server.")
-    click.echo("   For direct usage, try: uv run python test_server.py")
-    click.echo("   For Amtrak trains: uv run python test_amtrak.py")
+    click.echo("This tool is designed to run as an MCP server.")
+    click.echo("For direct usage, try: uv run python test_server.py")
+    click.echo("For Amtrak trains: uv run python test_amtrak.py")
 
 
 async def test_amtrak_trains() -> None:
     """Test Amtrak trains functionality."""
-    click.echo("🚂 Testing Amtrak trains...")
+    click.echo("Testing Amtrak trains...")
 
     async with ExtendedMBTAClient() as client:
         try:
             trains = await client.get_amtrak_trains()
-            click.echo(f"✓ Found {len(trains)} Amtrak trains")
+            click.echo(f"Found {len(trains)} Amtrak trains")
 
             if trains:
-                click.echo("\n📍 Sample trains:")
+                click.echo("\nSample trains:")
                 for i, train in enumerate(trains[:3], 1):
                     if isinstance(train, dict):
                         click.echo(
@@ -59,21 +59,21 @@ async def test_amtrak_trains() -> None:
                         click.echo()
 
         except (ValueError, RuntimeError, ConnectionError) as e:
-            click.echo(f"❌ Error: {e}", err=True)
+            click.echo(f"Error: {e}", err=True)
 
 
 async def test_mbta_routes() -> None:
     """Test MBTA routes functionality."""
-    click.echo("🚇 Testing MBTA routes...")
+    click.echo("Testing MBTA routes...")
 
     async with ExtendedMBTAClient() as client:
         try:
             routes = await client.get_routes(page_limit=5)
             data = routes.get("data", [])
-            click.echo(f"✓ Found {len(data)} MBTA routes")
+            click.echo(f"Found {len(data)} MBTA routes")
 
             if data:
-                click.echo("\n📍 Sample routes:")
+                click.echo("\nSample routes:")
                 for i, route in enumerate(data[:3], 1):
                     attrs = route.get("attributes", {})
                     click.echo(f"{i}. {attrs.get('long_name', 'Unknown')}")
@@ -82,7 +82,7 @@ async def test_mbta_routes() -> None:
                     click.echo()
 
         except (ValueError, RuntimeError, ConnectionError) as e:
-            click.echo(f"❌ Error: {e}", err=True)
+            click.echo(f"Error: {e}", err=True)
 
 
 @click.group()
@@ -122,7 +122,7 @@ def trains(limit: int, output_json: bool) -> None:
                 if output_json:
                     click.echo(json.dumps(trains[:limit], indent=2))
                 else:
-                    click.echo(f"🚂 Found {len(trains)} Amtrak trains")
+                    click.echo(f"Found {len(trains)} Amtrak trains")
                     for i, train in enumerate(trains[:limit], 1):
                         if isinstance(train, dict):
                             click.echo(f"\n{i}. Train ID: {train.get('id', 'Unknown')}")

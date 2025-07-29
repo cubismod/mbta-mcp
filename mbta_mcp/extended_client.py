@@ -3,11 +3,14 @@
 import logging
 from typing import Any
 
-from .cache import get_ttl_for_endpoint
+from async_lru import alru_cache
+
 from .client import MBTAClient
 from .fuzzy_filter import filter_data_fuzzy
 
 logger = logging.getLogger(__name__)
+
+PAGE_LIMIT = 175
 
 
 class ExtendedMBTAClient(MBTAClient):
@@ -17,6 +20,7 @@ class ExtendedMBTAClient(MBTAClient):
         await super().__aenter__()
         return self
 
+    @alru_cache(maxsize=100, ttl=10)
     async def get_vehicle_positions(self) -> dict[str, Any]:
         """Get real-time vehicle positions from the external API.
 
@@ -28,22 +32,11 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
-        # Check cache first
-        if self.cache:
-            cached_result = self.cache.get("vehicle_positions")
-            if cached_result is not None:
-                return cached_result  # type: ignore[no-any-return]
-
         url = "https://vehicles.ryanwallace.cloud/"
 
         async with self.session.get(url) as response:
             response.raise_for_status()
             result: dict[str, Any] = await response.json()
-
-            # Cache the result
-            if self.cache:
-                ttl = get_ttl_for_endpoint("vehicle_positions")
-                self.cache.set("vehicle_positions", result, ttl)
 
             return result
 
@@ -58,25 +51,15 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
-        # Check cache first
-        if self.cache:
-            cached_result = self.cache.get("external_alerts")
-            if cached_result is not None:
-                return cached_result  # type: ignore[no-any-return]
-
         url = "https://vehicles.ryanwallace.cloud/alerts"
 
         async with self.session.get(url) as response:
             response.raise_for_status()
             result: dict[str, Any] = await response.json()
 
-            # Cache the result
-            if self.cache:
-                ttl = get_ttl_for_endpoint("external_alerts")
-                self.cache.set("external_alerts", result, ttl)
-
             return result
 
+    @alru_cache(maxsize=100, ttl=10)
     async def get_track_prediction(
         self,
         station_id: str,
@@ -95,22 +78,6 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
-        # Create cache key for this specific prediction
-        cache_params = {
-            "station_id": station_id,
-            "route_id": route_id,
-            "trip_id": trip_id,
-            "headsign": headsign,
-            "direction_id": direction_id,
-            "scheduled_time": scheduled_time,
-        }
-
-        # Check cache first
-        if self.cache:
-            cached_result = self.cache.get("track_prediction", cache_params)
-            if cached_result is not None:
-                return cached_result  # type: ignore[no-any-return]
-
         url = "https://imt.ryanwallace.cloud/predictions"
         params = {
             "station_id": station_id,
@@ -124,11 +91,6 @@ class ExtendedMBTAClient(MBTAClient):
         async with self.session.post(url, params=params) as response:
             response.raise_for_status()
             result: dict[str, Any] = await response.json()
-
-            # Cache the result
-            if self.cache:
-                ttl = get_ttl_for_endpoint("track_prediction")
-                self.cache.set("track_prediction", result, ttl, cache_params)
 
             return result
 
@@ -152,6 +114,7 @@ class ExtendedMBTAClient(MBTAClient):
             result: dict[str, Any] = await response.json()
             return result
 
+    @alru_cache(maxsize=100, ttl=10)
     async def get_prediction_stats(
         self, station_id: str, route_id: str
     ) -> dict[str, Any]:
@@ -171,6 +134,7 @@ class ExtendedMBTAClient(MBTAClient):
             result: dict[str, Any] = await response.json()
             return result
 
+    @alru_cache(maxsize=100, ttl=10)
     async def get_historical_assignments(
         self, station_id: str, route_id: str, days: int = 30
     ) -> dict[str, Any]:
@@ -191,6 +155,7 @@ class ExtendedMBTAClient(MBTAClient):
             result: dict[str, Any] = await response.json()
             return result
 
+    @alru_cache(maxsize=100, ttl=10)
     async def get_amtrak_trains(self) -> list[dict[str, Any]]:
         """Get all tracked Amtrak trains from the Boston Amtrak Tracker API.
 
@@ -202,25 +167,15 @@ class ExtendedMBTAClient(MBTAClient):
                 "Client session not initialized. Use 'async with' context."
             )
 
-        # Check cache first
-        if self.cache:
-            cached_result = self.cache.get("amtrak_trains")
-            if cached_result is not None:
-                return cached_result  # type: ignore[no-any-return]
-
         url = "https://bos.ryanwallace.cloud/trains"
 
         async with self.session.get(url) as response:
             response.raise_for_status()
             result: list[dict[str, Any]] = await response.json()
 
-            # Cache the result
-            if self.cache:
-                ttl = get_ttl_for_endpoint("amtrak_trains")
-                self.cache.set("amtrak_trains", result, ttl)
-
             return result
 
+    @alru_cache(maxsize=100, ttl=10)
     async def get_amtrak_trains_geojson(self) -> dict[str, Any]:
         """Get Amtrak trains as GeoJSON for mapping applications.
 
@@ -239,6 +194,7 @@ class ExtendedMBTAClient(MBTAClient):
             result: dict[str, Any] = await response.json()
             return result
 
+    @alru_cache(maxsize=100, ttl=10)
     async def get_amtrak_health_status(self) -> dict[str, Any]:
         """Get health status of the Boston Amtrak Tracker API.
 
@@ -346,7 +302,7 @@ class ExtendedMBTAClient(MBTAClient):
         For better performance, also provide latitude/longitude.
         """
         # Fetch more to filter client-side
-        params: dict[str, Any] = {"page[limit]": min(page_limit * 10, 100)}
+        params: dict[str, Any] = {"page[limit]": min(page_limit * 10, PAGE_LIMIT)}
 
         # If location provided, use it to narrow results
         if latitude is not None and longitude is not None:
@@ -481,7 +437,7 @@ class ExtendedMBTAClient(MBTAClient):
     ) -> dict[str, Any]:
         """List all alerts with optional fuzzy filtering."""
         # Fetch maximum number of alerts to filter client-side
-        result = await self._request("/alerts", {"page[limit]": 100})
+        result = await self._request("/alerts", {"page[limit]": PAGE_LIMIT})
 
         if query and "data" in result:
             search_fields = ["attributes.header", "attributes.description", "id"]
@@ -499,7 +455,7 @@ class ExtendedMBTAClient(MBTAClient):
     ) -> dict[str, Any]:
         """List all facilities with optional fuzzy filtering."""
         # Fetch maximum number of facilities to filter client-side
-        result = await self._request("/facilities", {"page[limit]": 100})
+        result = await self._request("/facilities", {"page[limit]": PAGE_LIMIT})
 
         if query and "data" in result:
             search_fields = ["attributes.short_name", "attributes.long_name", "id"]
@@ -517,7 +473,7 @@ class ExtendedMBTAClient(MBTAClient):
     ) -> dict[str, Any]:
         """List all lines with optional fuzzy filtering."""
         # Fetch maximum number of lines to filter client-side
-        result = await self._request("/lines", {"page[limit]": 100})
+        result = await self._request("/lines", {"page[limit]": PAGE_LIMIT})
 
         if query and "data" in result:
             search_fields = ["attributes.short_name", "attributes.long_name", "id"]
@@ -535,7 +491,7 @@ class ExtendedMBTAClient(MBTAClient):
     ) -> dict[str, Any]:
         """List all routes with optional fuzzy filtering."""
         # Fetch maximum number of routes to filter client-side
-        result = await self._request("/routes", {"page[limit]": 100})
+        result = await self._request("/routes", {"page[limit]": PAGE_LIMIT})
 
         if query and "data" in result:
             search_fields = ["attributes.short_name", "attributes.long_name", "id"]
@@ -553,7 +509,7 @@ class ExtendedMBTAClient(MBTAClient):
     ) -> dict[str, Any]:
         """List all services with optional fuzzy filtering."""
         # Fetch maximum number of services to filter client-side
-        result = await self._request("/services", {"page[limit]": 100})
+        result = await self._request("/services", {"page[limit]": PAGE_LIMIT})
 
         if query and "data" in result:
             search_fields = ["attributes.description", "id"]
@@ -571,7 +527,7 @@ class ExtendedMBTAClient(MBTAClient):
     ) -> dict[str, Any]:
         """List all stops with optional fuzzy filtering."""
         # Fetch maximum number of stops to filter client-side
-        result = await self._request("/stops", {"page[limit]": 100})
+        result = await self._request("/stops", {"page[limit]": PAGE_LIMIT})
 
         if query and "data" in result:
             search_fields = ["attributes.name", "attributes.description", "id"]

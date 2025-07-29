@@ -14,8 +14,6 @@ from tenacity import (
     wait_exponential_jitter,
 )
 
-from .cache import APICache, get_ttl_for_endpoint
-
 logger = logging.getLogger(__name__)
 
 
@@ -26,14 +24,12 @@ class MBTAClient:
         self,
         api_key: str | None = None,
         base_url: str | None = None,
-        enable_cache: bool = True,
     ):
         self.api_key = api_key or os.getenv("MBTA_API_KEY")
         self.base_url = base_url or os.getenv(
             "MBTA_BASE_URL", "https://api-v3.mbta.com"
         )
         self.session: aiohttp.ClientSession | None = None
-        self.cache: APICache | None = APICache() if enable_cache else None
 
     async def __aenter__(self) -> "MBTAClient":
         self.session = aiohttp.ClientSession()
@@ -47,8 +43,6 @@ class MBTAClient:
     ) -> None:
         if self.session:
             await self.session.close()
-        if self.cache:
-            await self.cache.close()
 
     def _get_headers(self) -> dict[str, str]:
         headers = {"Accept": "application/vnd.api+json"}
@@ -76,12 +70,6 @@ class MBTAClient:
                 "Client session not initialized. Use 'async with' context."
             )
 
-        # Check cache first
-        if self.cache:
-            cached_result = self.cache.get(endpoint, params)
-            if cached_result is not None:
-                return cached_result  # type: ignore[no-any-return]
-
         url = urljoin(self.base_url, endpoint)
         headers = self._get_headers()
 
@@ -90,11 +78,6 @@ class MBTAClient:
         ) as response:
             response.raise_for_status()
             result: dict[str, Any] = await response.json()
-
-            # Cache the result
-            if self.cache:
-                ttl = get_ttl_for_endpoint(endpoint)
-                self.cache.set(endpoint, result, ttl, params)
 
             return result
 
@@ -110,24 +93,6 @@ class MBTAClient:
         if route_type is not None:
             params["filter[type]"] = route_type
         return await self._request(endpoint, params)
-
-    def get_cache_stats(self) -> dict[str, Any]:
-        """Get cache statistics."""
-        if self.cache:
-            return self.cache.get_stats()
-        return {"error": "Cache not enabled"}
-
-    def clear_cache(self) -> None:
-        """Clear all cached responses."""
-        if self.cache:
-            self.cache.clear()
-
-    def invalidate_cache(
-        self, endpoint: str, params: dict[str, Any] | None = None
-    ) -> None:
-        """Invalidate a specific cache entry."""
-        if self.cache:
-            self.cache.invalidate(endpoint, params)
 
     async def get_stops(
         self,

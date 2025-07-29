@@ -43,5 +43,5 @@ jobs:
     - name: Run codespell
       run: uv run codespell
     
-    - name: Test server functionality
-      run: uv run python test_server.py
+    - name: Run tests
+      run: uv run pytest
