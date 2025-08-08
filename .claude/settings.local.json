@@ -4,7 +4,8 @@
       "WebFetch(domain:github.com)",
       "Bash(uv run pytest:*)",
       "Bash(uv run ruff:*)",
-      "Bash(uv run:*)"
+      "Bash(uv run:*)",
+      "mcp__mbta__mbta_get_predictions_for_stop"
     ],
     "deny": []
   }

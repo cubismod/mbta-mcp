@@ -1,9 +1,11 @@
 """Extended MBTA API along with additional IMT functionality and Massachusetts Amtrak vehicle data"""
 
 import heapq
+import json
 import logging
 import math
 from datetime import datetime, time
+from pathlib import Path
 from typing import Any
 
 from async_lru import alru_cache
@@ -299,7 +301,9 @@ class ExtendedMBTAClient(MBTAClient):
         For better performance, also provide latitude/longitude.
         """
         # Fetch more to filter client-side
-        params: dict[str, Any] = {"page[limit]": min(page_limit * 10, PAGE_LIMIT)}
+        params: dict[str, Any] = {
+            "page[limit]": min(page_limit * 10, PAGE_LIMIT),
+        }
 
         # If location provided, use it to narrow results
         if latitude is not None and longitude is not None:
@@ -342,15 +346,34 @@ class ExtendedMBTAClient(MBTAClient):
             radius_km = radius / 1000  # Convert to kilometers
 
             for stop in result["data"]:
-                # Skip stops without coordinates
-                if (
-                    not stop["attributes"]["latitude"]
-                    or not stop["attributes"]["longitude"]
-                ):
+                stop_lat = stop["attributes"]["latitude"]
+                stop_lon = stop["attributes"]["longitude"]
+
+                # If stop doesn't have coordinates, try to get them from parent station
+                if not stop_lat or not stop_lon:
+                    parent_station = stop.get("relationships", {}).get("parent_station", {}).get("data")
+                    if parent_station:
+                        try:
+                            parent_id = parent_station.get("id")
+                            parent_result = await self._request(f"/stops/{parent_id}", {})
+                            if parent_result.get("data"):
+                                parent_data = parent_result["data"]
+                                stop_lat = parent_data["attributes"]["latitude"]
+                                stop_lon = parent_data["attributes"]["longitude"]
+                                if stop_lat and stop_lon:
+                                    # Update the stop data with parent coordinates
+                                    stop["attributes"]["latitude"] = stop_lat
+                                    stop["attributes"]["longitude"] = stop_lon
+                                    stop["_from_parent"] = True  # Mark for debugging
+                        except Exception:
+                            continue  # Skip if can't get parent data
+
+                # Skip if still no coordinates
+                if not stop_lat or not stop_lon:
                     continue
 
-                stop_lat = float(stop["attributes"]["latitude"])
-                stop_lon = float(stop["attributes"]["longitude"])
+                stop_lat = float(stop_lat)
+                stop_lon = float(stop_lon)
 
                 distance_km = self._haversine_distance(
                     latitude, longitude, stop_lat, stop_lon
@@ -554,7 +577,9 @@ class ExtendedMBTAClient(MBTAClient):
     ) -> dict[str, Any]:
         """List all stops with optional fuzzy filtering."""
         # Fetch maximum number of stops to filter client-side
-        result = await self._request("/stops", {"page[limit]": PAGE_LIMIT})
+        result = await self._request("/stops", {
+            "page[limit]": PAGE_LIMIT,
+        })
 
         if query and "data" in result:
             search_fields = ["attributes.name", "attributes.description", "id"]
@@ -644,11 +669,11 @@ class ExtendedMBTAClient(MBTAClient):
         max_stops_limit = 10
 
         try:
-            # Find nearby stops for origin and destination
-            origin_stops = await self.get_nearby_stops(
+            # Find nearby stops for origin and destination with progressive search radii
+            origin_stops = await self._find_nearby_transit_stops(
                 origin_lat, origin_lon, max_walk_distance, max_stops_limit
             )
-            dest_stops = await self.get_nearby_stops(
+            dest_stops = await self._find_nearby_transit_stops(
                 dest_lat, dest_lon, max_walk_distance, max_stops_limit
             )
 
@@ -1211,6 +1236,193 @@ class ExtendedMBTAClient(MBTAClient):
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
         return earth_radius_km * c
+
+    @alru_cache(maxsize=1)
+    async def _load_major_stations(self) -> dict[str, Any]:
+        """Load major stations from static JSON file with caching."""
+        try:
+            data_path = Path(__file__).parent / "data" / "major_stations.json"
+            with open(data_path, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load static station data: {e}")
+            return {"rapid_transit": [], "commuter_rail": []}
+
+    async def _find_nearby_transit_stops(
+        self,
+        latitude: float,
+        longitude: float,
+        max_walk_distance: float,
+        max_stops_limit: int,
+    ) -> dict[str, Any]:
+        """Find nearby transit stops with comprehensive search strategy.
+        
+        Uses multiple approaches to find the best transit options:
+        1. Check static major stations data first for reliable coordinates
+        2. Geographic search for stops with coordinates
+        3. Fuzzy search for major stations that may lack coordinates  
+        4. Prioritizes rapid transit over bus stops
+        """
+        rapid_transit_stops = []
+        bus_stops = []
+
+        # First, check static major stations data
+        major_stations = await self._load_major_stations()
+        all_major_stations = (
+            major_stations.get("rapid_transit", []) +
+            major_stations.get("commuter_rail", [])
+        )
+
+        # Find nearby major stations from static data
+        for station in all_major_stations:
+            distance_km = self._haversine_distance(
+                latitude, longitude, station["latitude"], station["longitude"]
+            )
+            distance_m = distance_km * 1000
+
+            if distance_m <= max_walk_distance:
+                # Convert to MBTA API format
+                stop_data = {
+                    "id": station["id"],
+                    "type": "stop",
+                    "attributes": {
+                        "name": station["name"],
+                        "latitude": station["latitude"],
+                        "longitude": station["longitude"],
+                        "municipality": station.get("municipality", ""),
+                        "description": station.get("description", ""),
+                        "location_type": station.get("location_type", 1),
+                        "vehicle_type": station["route_type"]
+                    },
+                    "_distance_km": distance_km,
+                    "_from_static_data": True
+                }
+
+                if station["route_type"] in [0, 1] or station["route_type"] == 2:  # Light rail or subway
+                    rapid_transit_stops.append(stop_data)
+
+        # If we have good coverage from static data, use it primarily
+        if len(rapid_transit_stops) >= 2:
+            logger.info(f"Found {len(rapid_transit_stops)} nearby major stations from static data")
+        else:
+            # Supplement with geographic API search
+            geographic_stops = await self.get_nearby_stops(
+                latitude, longitude, max_walk_distance * 2, max_stops_limit * 3
+            )
+
+            # Process geographically found stops
+            existing_ids = {stop["id"] for stop in rapid_transit_stops}
+            for stop in geographic_stops.get("data", []):
+                if stop["id"] in existing_ids:
+                    continue
+
+                distance_m = stop.get("_distance_km", 0) * 1000
+                vehicle_type = stop["attributes"]["vehicle_type"]
+
+                if distance_m <= max_walk_distance:
+                    if vehicle_type in [0, 1]:  # Light rail or subway
+                        rapid_transit_stops.append(stop)
+                    elif vehicle_type == 3:  # Bus
+                        bus_stops.append(stop)
+
+            # If still not enough rapid transit options, search by name patterns
+            if len(rapid_transit_stops) < 2:
+                await self._supplement_with_station_search(
+                    latitude, longitude, max_walk_distance, rapid_transit_stops
+                )
+
+        # Sort by distance
+        rapid_transit_stops.sort(key=lambda x: x.get("_distance_km", 0))
+        bus_stops.sort(key=lambda x: x.get("_distance_km", 0))
+
+        # Prefer rapid transit if available, otherwise use bus stops
+        if rapid_transit_stops:
+            result_data = rapid_transit_stops[:max_stops_limit]
+            logger.info(f"Using {len(result_data)} rapid transit stops for trip planning")
+        else:
+            result_data = bus_stops[:max_stops_limit]
+            logger.info(f"Using {len(result_data)} bus stops for trip planning")
+
+        return {
+            "data": result_data,
+            "jsonapi": {"version": "1.0"},
+            "links": {}
+        }
+
+    async def _supplement_with_station_search(
+        self,
+        latitude: float,
+        longitude: float,
+        max_walk_distance: float,
+        existing_stops: list[dict[str, Any]]
+    ) -> None:
+        """Supplement geographic search with name-based searches for major stations."""
+        existing_ids = {stop["id"] for stop in existing_stops}
+
+        # Common search terms for areas that might have major stations
+        search_terms = []
+
+        # Determine likely area based on coordinates to search smarter
+        if 42.35 <= latitude <= 42.37 and -71.09 <= longitude <= -71.08:
+            search_terms.extend(["kendall", "mit", "central", "cambridge"])
+        elif 42.34 <= latitude <= 42.36 and -71.08 <= longitude <= -71.06:
+            search_terms.extend(["copley", "back bay", "boylston", "arlington"])
+        elif 42.355 <= latitude <= 42.365 and -71.065 <= longitude <= -71.055:
+            search_terms.extend(["downtown", "park", "state", "government"])
+
+        # Always search for nearby major stations
+        search_terms.extend(["station", "square"])
+
+        for term in search_terms:
+            try:
+                search_results = await self.search_stops(term, page_limit=10)
+
+                for stop in search_results.get("data", []):
+                    # Skip if already found or if it's a bus stop
+                    vehicle_type = stop["attributes"]["vehicle_type"]
+                    if (stop["id"] in existing_ids or
+                        vehicle_type not in [0, 1]):
+                        continue
+
+                    stop_lat = stop["attributes"]["latitude"]
+                    stop_lon = stop["attributes"]["longitude"]
+
+                    # If stop doesn't have coordinates, try parent station
+                    if not stop_lat or not stop_lon:
+                        parent_station = stop.get("relationships", {}).get("parent_station", {}).get("data")
+                        if parent_station:
+                            try:
+                                parent_id = parent_station.get("id")
+                                parent_result = await self._request(f"/stops/{parent_id}", {})
+                                if parent_result.get("data"):
+                                    parent_data = parent_result["data"]
+                                    stop_lat = parent_data["attributes"]["latitude"]
+                                    stop_lon = parent_data["attributes"]["longitude"]
+                                    if stop_lat and stop_lon:
+                                        stop["attributes"]["latitude"] = stop_lat
+                                        stop["attributes"]["longitude"] = stop_lon
+                                        stop["_from_parent"] = True
+                            except Exception:
+                                continue
+
+                    if not stop_lat or not stop_lon:
+                        continue
+
+                    # Calculate distance
+                    stop_lat = float(stop_lat)
+                    stop_lon = float(stop_lon)
+                    distance_km = self._haversine_distance(latitude, longitude, stop_lat, stop_lon)
+                    distance_m = distance_km * 1000
+
+                    # Add if within walking distance
+                    if distance_m <= max_walk_distance:
+                        stop["_distance_km"] = distance_km
+                        existing_stops.append(stop)
+                        existing_ids.add(stop["id"])
+
+            except Exception as e:
+                logger.debug("Failed to search for '%s': %s", term, e)
+                continue
 
     def _parse_datetime(self, time_str: str | None) -> datetime | None:
         """Parse ISO datetime string to datetime object."""
