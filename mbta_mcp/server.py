@@ -33,7 +33,7 @@ server: Server = Server("mbta-mcp")  # type: ignore[type-arg]
 async def handle_list_tools() -> list[types.Tool]:
     """List available tools."""
     logger.info("Client requested list of available tools")
-    tool_count = 30  # We have 30 MBTA tools (including 3 Amtrak tools + 6 list_all tools + 1 time-based schedule tool)
+    tool_count = 32  # We have 32 MBTA tools (including 3 Amtrak tools + 6 list_all tools + 1 time-based schedule tool + 2 trip planning tools)
     logger.info("Returning %d MBTA API tools", tool_count)
     return [
         types.Tool(
@@ -741,6 +741,97 @@ async def handle_list_tools() -> list[types.Tool]:
                 },
             },
         ),
+        types.Tool(
+            name="mbta_plan_trip",
+            description=(
+                "Plan a trip between two locations using MBTA public transit. "
+                "Returns optimal route options with transfers, walking times, and real-time data."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "origin_lat": {
+                        "type": "number",
+                        "description": "Origin latitude",
+                    },
+                    "origin_lon": {
+                        "type": "number",
+                        "description": "Origin longitude",
+                    },
+                    "dest_lat": {
+                        "type": "number",
+                        "description": "Destination latitude",
+                    },
+                    "dest_lon": {
+                        "type": "number",
+                        "description": "Destination longitude",
+                    },
+                    "departure_time": {
+                        "type": "string",
+                        "description": "Preferred departure time in ISO format (defaults to now)",
+                    },
+                    "arrival_time": {
+                        "type": "string",
+                        "description": "Required arrival time in ISO format (overrides departure_time)",
+                    },
+                    "max_walk_distance": {
+                        "type": "number",
+                        "description": "Maximum walking distance in meters (default: 800)",
+                        "default": 800,
+                    },
+                    "max_transfers": {
+                        "type": "integer",
+                        "description": "Maximum number of transfers allowed (default: 3)",
+                        "default": 3,
+                    },
+                    "prefer_fewer_transfers": {
+                        "type": "boolean",
+                        "description": "Prioritize routes with fewer transfers (default: true)",
+                        "default": True,
+                    },
+                    "wheelchair_accessible": {
+                        "type": "boolean",
+                        "description": "Only include wheelchair accessible routes (default: false)",
+                        "default": False,
+                    },
+                },
+                "required": ["origin_lat", "origin_lon", "dest_lat", "dest_lon"],
+            },
+        ),
+        types.Tool(
+            name="mbta_get_route_alternatives",
+            description=(
+                "Get alternative route options by excluding certain modes of transport. "
+                "Useful for finding backup routes when primary transit modes are disrupted."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "origin_lat": {
+                        "type": "number",
+                        "description": "Origin latitude",
+                    },
+                    "origin_lon": {
+                        "type": "number",
+                        "description": "Origin longitude",
+                    },
+                    "dest_lat": {
+                        "type": "number",
+                        "description": "Destination latitude",
+                    },
+                    "dest_lon": {
+                        "type": "number",
+                        "description": "Destination longitude",
+                    },
+                    "primary_route_modes": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Route types to exclude from alternatives (0=Light Rail, 1=Subway, 2=Commuter Rail, 3=Bus, 4=Ferry)",
+                    },
+                },
+                "required": ["origin_lat", "origin_lon", "dest_lat", "dest_lon"],
+            },
+        ),
     ]
 
 
@@ -931,6 +1022,29 @@ async def handle_call_tool(
                     trip_id=arguments.get("trip_id"),
                     direction_id=arguments.get("direction_id"),
                     page_limit=arguments.get("page_limit", 10),
+                )
+            elif name == "mbta_plan_trip":
+                result = await client.plan_trip(
+                    origin_lat=arguments["origin_lat"],
+                    origin_lon=arguments["origin_lon"],
+                    dest_lat=arguments["dest_lat"],
+                    dest_lon=arguments["dest_lon"],
+                    departure_time=arguments.get("departure_time"),
+                    arrival_time=arguments.get("arrival_time"),
+                    max_walk_distance=arguments.get("max_walk_distance", 800),
+                    max_transfers=arguments.get("max_transfers", 3),
+                    prefer_fewer_transfers=arguments.get(
+                        "prefer_fewer_transfers", True
+                    ),
+                    wheelchair_accessible=arguments.get("wheelchair_accessible", False),
+                )
+            elif name == "mbta_get_route_alternatives":
+                result = await client.get_route_alternatives(
+                    origin_lat=arguments["origin_lat"],
+                    origin_lon=arguments["origin_lon"],
+                    dest_lat=arguments["dest_lat"],
+                    dest_lon=arguments["dest_lon"],
+                    primary_route_modes=arguments.get("primary_route_modes"),
                 )
             else:
                 raise ValueError(f"Unknown tool: {name}")
