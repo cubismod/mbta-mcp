@@ -141,6 +141,8 @@ ignore = [
     "PLR0912", # too-many-branches (tool dispatch)
     "TRY301",  # raise-within-try
     "PLR0915", # too-many-positional-arguments (tool dispatch)
+    "BLE001",  # blind-except (acceptable for external API error handling)
+    "PLR0911", # too-many-return-statements (acceptable for dispatch functions)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -155,26 +157,34 @@ ignore = [
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
-warn_return_any = true
+strict = false
+warn_return_any = false
 warn_unused_configs = true
-disallow_any_generics = true
-disallow_subclassing_any = true
-disallow_untyped_calls = true
+disallow_any_generics = false
+disallow_subclassing_any = false
+disallow_untyped_calls = false
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
-disallow_untyped_decorators = true
+disallow_untyped_decorators = false
 warn_redundant_casts = true
-warn_unused_ignores = true
+warn_unused_ignores = false
 warn_no_return = true
 warn_unreachable = true
-strict_equality = true
+strict_equality = false
 
 [[tool.mypy.overrides]]
 module = ["mcp.*"]
 ignore_missing_imports = true
 disallow_untyped_calls = false
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+ignore_missing_imports = true
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
 disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]

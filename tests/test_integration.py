@@ -1,6 +1,7 @@
 """Integration tests for MBTA MCP server."""
 
 import asyncio
+import json
 import os
 from unittest.mock import AsyncMock, patch
 
@@ -19,7 +20,7 @@ class TestMCPServerIntegration:
         """Test that all expected tools are registered."""
         tools = await handle_list_tools()
 
-        assert len(tools) == 30, f"Expected 30 tools, got {len(tools)}"
+        assert len(tools) == 32, f"Expected 32 tools, got {len(tools)}"
 
         tool_names = {tool.name for tool in tools}
 
@@ -55,6 +56,8 @@ class TestMCPServerIntegration:
             "mbta_list_all_services",
             "mbta_list_all_stops",
             "mbta_search_stops",
+            "mbta_plan_trip",
+            "mbta_get_route_alternatives",
         }
 
         missing_tools = expected_tools - tool_names
@@ -266,3 +269,251 @@ async def test_server_startup_and_shutdown() -> None:
     result = await handle_call_tool("mbta_get_routes", {"page_limit": 1})
     assert len(result) == 1
     assert isinstance(result[0], types.TextContent)
+
+
+class TestTripPlanningIntegration:
+    """Integration tests for trip planning functionality."""
+
+    @pytest.mark.asyncio
+    async def test_plan_trip_tool_registration(self) -> None:
+        """Test that trip planning tools are properly registered."""
+        tools = await handle_list_tools()
+        tool_names = {tool.name for tool in tools}
+
+        assert "mbta_plan_trip" in tool_names
+        assert "mbta_get_route_alternatives" in tool_names
+
+        # Check that the tools have proper schemas
+        trip_tool = next(tool for tool in tools if tool.name == "mbta_plan_trip")
+        alt_tool = next(
+            tool for tool in tools if tool.name == "mbta_get_route_alternatives"
+        )
+
+        assert trip_tool.inputSchema["type"] == "object"
+        assert "origin_lat" in trip_tool.inputSchema["properties"]
+        assert "origin_lon" in trip_tool.inputSchema["properties"]
+        assert "dest_lat" in trip_tool.inputSchema["properties"]
+        assert "dest_lon" in trip_tool.inputSchema["properties"]
+
+        assert alt_tool.inputSchema["type"] == "object"
+        assert "origin_lat" in alt_tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_plan_trip_tool_execution(self) -> None:
+        """Test trip planning tool execution."""
+        # Test with MIT to Harvard coordinates
+        result = await handle_call_tool(
+            "mbta_plan_trip",
+            {
+                "origin_lat": 42.3601,
+                "origin_lon": -71.0942,
+                "dest_lat": 42.3736,
+                "dest_lon": -71.1190,
+                "max_walk_distance": 800,
+                "max_transfers": 2,
+            },
+        )
+
+        assert len(result) == 1
+        assert isinstance(result[0], types.TextContent)
+
+        # Parse the JSON response
+        content = json.loads(result[0].text)
+
+        # Should have the expected structure
+        assert "origin" in content
+        assert "destination" in content
+        assert "search_parameters" in content
+
+        # Check coordinates are preserved
+        assert content["origin"]["lat"] == 42.3601
+        assert content["origin"]["lon"] == -71.0942
+        assert content["destination"]["lat"] == 42.3736
+        assert content["destination"]["lon"] == -71.1190
+
+    @pytest.mark.asyncio
+    async def test_plan_trip_tool_with_all_parameters(self) -> None:
+        """Test trip planning tool with all optional parameters."""
+        result = await handle_call_tool(
+            "mbta_plan_trip",
+            {
+                "origin_lat": 42.3601,
+                "origin_lon": -71.0942,
+                "dest_lat": 42.3736,
+                "dest_lon": -71.1190,
+                "departure_time": "2025-01-01T10:00:00-05:00",
+                "max_walk_distance": 1000,
+                "max_transfers": 1,
+                "prefer_fewer_transfers": False,
+                "wheelchair_accessible": True,
+            },
+        )
+
+        assert len(result) == 1
+        assert isinstance(result[0], types.TextContent)
+
+        content = json.loads(result[0].text)
+        params = content["search_parameters"]
+
+        assert params["departure_time"] == "2025-01-01T10:00:00-05:00"
+        assert params["max_walk_distance"] == 1000
+        assert params["max_transfers"] == 1
+        assert params["prefer_fewer_transfers"] is False
+        assert params["wheelchair_accessible"] is True
+
+    @pytest.mark.asyncio
+    async def test_get_route_alternatives_tool_execution(self) -> None:
+        """Test route alternatives tool execution."""
+        result = await handle_call_tool(
+            "mbta_get_route_alternatives",
+            {
+                "origin_lat": 42.3601,
+                "origin_lon": -71.0942,
+                "dest_lat": 42.3736,
+                "dest_lon": -71.1190,
+                "primary_route_modes": ["1"],  # Exclude subway
+            },
+        )
+
+        assert len(result) == 1
+        assert isinstance(result[0], types.TextContent)
+
+        content = json.loads(result[0].text)
+
+        # Should have the expected structure (even if no alternatives found)
+        assert "origin" in content or "error" in content
+
+    @pytest.mark.asyncio
+    async def test_plan_trip_tool_missing_required_parameters(self) -> None:
+        """Test trip planning tool with missing required parameters."""
+        result = await handle_call_tool(
+            "mbta_plan_trip",
+            {
+                "origin_lat": 42.3601,
+                # Missing origin_lon, dest_lat, dest_lon
+            },
+        )
+
+        assert len(result) == 1
+        assert isinstance(result[0], types.TextContent)
+        assert "Error:" in result[0].text
+
+    @pytest.mark.asyncio
+    async def test_plan_trip_tool_invalid_coordinates(self) -> None:
+        """Test trip planning tool with invalid coordinates."""
+        result = await handle_call_tool(
+            "mbta_plan_trip",
+            {
+                "origin_lat": 999.0,  # Invalid latitude
+                "origin_lon": -71.0942,
+                "dest_lat": 42.3736,
+                "dest_lon": -71.1190,
+            },
+        )
+
+        assert len(result) == 1
+        assert isinstance(result[0], types.TextContent)
+
+        # Should either return error or handle gracefully
+        content = result[0].text
+        assert isinstance(content, str)
+
+    @pytest.mark.asyncio
+    async def test_plan_trip_tool_remote_locations(self) -> None:
+        """Test trip planning tool with locations far from MBTA service area."""
+        result = await handle_call_tool(
+            "mbta_plan_trip",
+            {
+                "origin_lat": 40.7128,  # New York City
+                "origin_lon": -74.0060,
+                "dest_lat": 40.7589,
+                "dest_lon": -73.9851,
+            },
+        )
+
+        assert len(result) == 1
+        assert isinstance(result[0], types.TextContent)
+
+        content = json.loads(result[0].text)
+
+        # Should return error about no nearby stops
+        assert "error" in content
+        assert "No transit stops found" in content["error"]
+
+    @pytest.mark.asyncio
+    async def test_trip_planning_tools_with_mock_client_error(self) -> None:
+        """Test trip planning tools handle client errors gracefully."""
+        with patch("mbta_mcp.server.ExtendedMBTAClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.__aenter__.return_value = mock_client
+            mock_client.__aexit__.return_value = None
+            mock_client.plan_trip.side_effect = Exception("Network timeout")
+            mock_client_class.return_value = mock_client
+
+            result = await handle_call_tool(
+                "mbta_plan_trip",
+                {
+                    "origin_lat": 42.3601,
+                    "origin_lon": -71.0942,
+                    "dest_lat": 42.3736,
+                    "dest_lon": -71.1190,
+                },
+            )
+
+            assert len(result) == 1
+            assert isinstance(result[0], types.TextContent)
+            assert "Error:" in result[0].text
+
+    @pytest.mark.asyncio
+    async def test_concurrent_trip_planning_calls(self) -> None:
+        """Test multiple concurrent trip planning calls."""
+
+        tasks = [
+            handle_call_tool(
+                "mbta_plan_trip",
+                {
+                    "origin_lat": 42.3601,
+                    "origin_lon": -71.0942,
+                    "dest_lat": 42.3736,
+                    "dest_lon": -71.1190,
+                },
+            ),
+            handle_call_tool(
+                "mbta_get_route_alternatives",
+                {
+                    "origin_lat": 42.3601,
+                    "origin_lon": -71.0942,
+                    "dest_lat": 42.3736,
+                    "dest_lon": -71.1190,
+                },
+            ),
+        ]
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        assert len(results) == 2
+        for result in results:
+            assert not isinstance(result, Exception)
+            assert isinstance(result, list)
+            assert len(result) == 1
+            assert isinstance(result[0], types.TextContent)
+
+    @pytest.mark.asyncio
+    async def test_trip_planning_tool_schema_validation(self) -> None:
+        """Test that trip planning tools have proper schema validation."""
+        tools = await handle_list_tools()
+        trip_tool = next(tool for tool in tools if tool.name == "mbta_plan_trip")
+
+        # Check required fields
+        required_fields = trip_tool.inputSchema.get("required", [])
+        assert "origin_lat" in required_fields
+        assert "origin_lon" in required_fields
+        assert "dest_lat" in required_fields
+        assert "dest_lon" in required_fields
+
+        # Check optional fields have defaults
+        properties = trip_tool.inputSchema["properties"]
+        assert "default" in properties["max_walk_distance"]
+        assert "default" in properties["max_transfers"]
+        assert "default" in properties["prefer_fewer_transfers"]
+        assert "default" in properties["wheelchair_accessible"]
