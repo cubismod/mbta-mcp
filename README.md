@@ -19,6 +19,7 @@ An MCP (Model Context Protocol) server for the MBTA V3 API, providing access to 
 - **Track Predictions**: Machine learning-powered track assignment predictions
 - **Historical Data**: Access to historical track assignments and performance metrics
 - **Caching**: Memory-based caching with configurable TTL for improved performance
+- **Resource Data**: Static reference data including route types, transit hubs, fare information, service hours, and trip planning prompts
 
 ## Installation
 
@@ -318,6 +319,35 @@ Get historical track assignments for analysis and pattern recognition.
 
 - **Parameters:** `station_id` (required), `route_id` (required), `days` (default: 30)
 - **Returns:** Historical track assignment data with actual usage patterns
+
+### Resource Data
+
+The MBTA MCP server provides access to static reference data that can be used for trip planning, fare calculations, and general transit information. These resources are available through the MCP resources protocol.
+
+#### Available Resources
+
+- **Route Types** (`mbta://data/route_types.json`): Complete information about MBTA route types including subway, bus, commuter rail, and ferry services with descriptions, examples, and visual identifiers.
+
+- **Transit Hubs** (`mbta://data/transit_hubs.json`): Information about major transit hubs and transfer points in the MBTA system, including South Station, North Station, Back Bay, and other key locations.
+
+- **Fare Information** (`mbta://data/fare_information.json`): Complete MBTA fare structure including subway, bus, commuter rail, and ferry pricing, payment methods, and discount information.
+
+- **Service Hours** (`mbta://data/service_hours.json`): MBTA service hours and frequency information for all transit modes, including peak hours and special services.
+
+- **Major Stations** (`mbta://data/major_stations.json`): Comprehensive database of major MBTA stations with location and service information.
+
+- **Trip Planning Prompts** (`mbta://data/trip_planning_prompts.json`): Comprehensive collection of trip planning prompts for common scenarios including airport transfers, daily commutes, event planning, accessibility needs, and emergency situations.
+
+#### Using Resources
+
+Resources can be accessed through MCP-compatible clients that support the resources protocol. The data is provided in JSON format and includes structured information for programmatic use.
+
+**Example Resource Usage:**
+- Access route type information for UI development
+- Get fare information for cost calculations
+- Use transit hub data for transfer planning
+- Reference service hours for scheduling
+- Apply trip planning prompts for common scenarios
 
 ### Trip Planning Tools
 
@@ -659,6 +689,14 @@ Once connected, you can ask your LLM questions like:
 - "Get all current Amtrak trains in the Boston area"
 - "Show me Amtrak trains as GeoJSON for mapping"
 - "Check the health status of the Amtrak tracker API"
+
+**Resource Data:**
+- "Show me the MBTA route types and their descriptions"
+- "What are the major transit hubs in Boston?"
+- "Get the current fare information for subway and bus"
+- "What are the service hours for the Red Line?"
+- "Show me trip planning prompts for airport transfers"
+- "Get accessibility information for major stations"
 
 ### Troubleshooting
 

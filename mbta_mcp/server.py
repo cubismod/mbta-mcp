@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from mcp import types
 from mcp.server import NotificationOptions, Server
 from mcp.server.models import InitializationOptions
+from pydantic import AnyUrl
 
 from .extended_client import ExtendedMBTAClient
 
@@ -1057,6 +1058,111 @@ async def handle_call_tool(
     except Exception as e:
         logger.exception("Error executing %s", name)
         return [types.TextContent(type="text", text=f"Error: {e!s}")]
+
+
+@server.list_resources()  # type: ignore[misc, no-untyped-call]
+async def handle_list_resources() -> list[types.Resource]:
+    """List available resources."""
+    logger.info("Client requested list of available resources")
+
+    resources = [
+        types.Resource(
+            name="route_types",
+            uri=AnyUrl("mbta://data/route_types.json"),
+            title="MBTA Route Types",
+            description="Complete information about MBTA route types including subway, bus, commuter rail, and ferry services",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            name="transit_hubs",
+            uri=AnyUrl("mbta://data/transit_hubs.json"),
+            title="Major Transit Hubs",
+            description="Information about major transit hubs and transfer points in the MBTA system",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            name="fare_information",
+            uri=AnyUrl("mbta://data/fare_information.json"),
+            title="MBTA Fare Information",
+            description="Complete MBTA fare structure including subway, bus, commuter rail, and ferry pricing",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            name="service_hours",
+            uri=AnyUrl("mbta://data/service_hours.json"),
+            title="Service Hours and Frequency",
+            description="MBTA service hours and frequency information for all transit modes",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            name="major_stations",
+            uri=AnyUrl("mbta://data/major_stations.json"),
+            title="Major Stations Database",
+            description="Comprehensive database of major MBTA stations with location and service information",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            name="trip_planning_prompts",
+            uri=AnyUrl("mbta://data/trip_planning_prompts.json"),
+            title="Trip Planning Prompts",
+            description="Comprehensive collection of trip planning prompts for common scenarios and use cases",
+            mimeType="application/json",
+        ),
+    ]
+
+    logger.info("Returning %d MBTA data resources", len(resources))
+    return resources
+
+
+@server.read_resource()  # type: ignore[misc, no-untyped-call]
+async def handle_read_resource(uri: str) -> types.ReadResourceResult:
+    """Read a resource by URI."""
+    logger.info("Client requested to read resource: %s", uri)
+
+    try:
+        # Parse the URI to get the resource name
+        if not uri.startswith("mbta://data/"):
+            raise ValueError(f"Invalid resource URI: {uri}")
+
+        resource_name = uri.replace("mbta://data/", "")
+
+        # Map resource names to file paths
+        resource_files = {
+            "route_types.json": "mbta_mcp/data/route_types.json",
+            "transit_hubs.json": "mbta_mcp/data/transit_hubs.json",
+            "fare_information.json": "mbta_mcp/data/fare_information.json",
+            "service_hours.json": "mbta_mcp/data/service_hours.json",
+            "major_stations.json": "mbta_mcp/data/major_stations.json",
+            "trip_planning_prompts.json": "mbta_mcp/data/trip_planning_prompts.json",
+        }
+
+        if resource_name not in resource_files:
+            raise ValueError(f"Unknown resource: {resource_name}")
+
+        file_path = resource_files[resource_name]
+
+        # Read the file content
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        logger.info(
+            "Successfully read resource %s (%d characters)", resource_name, len(content)
+        )
+
+        return types.ReadResourceResult(
+            contents=[
+                types.TextResourceContents(
+                    uri=AnyUrl(uri), text=content, mimeType="application/json"
+                )
+            ]
+        )
+
+    except FileNotFoundError:
+        logger.error("Resource file not found: %s", uri)
+        raise ValueError(f"Resource not found: {uri}")
+    except Exception as e:
+        logger.exception("Error reading resource: %s", uri)
+        raise ValueError(f"Error reading resource: {e}")
 
 
 async def async_main() -> None:

@@ -1,7 +1,9 @@
 """MBTA V3 API client."""
 
+import json
 import logging
 import os
+from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
 
@@ -103,7 +105,14 @@ class MBTAClient:
         radius: float | None = None,
         page_limit: int = 10,
     ) -> dict[str, Any]:
-        """Get stops from the MBTA API."""
+        """Get stops from the MBTA API, with fallback to major stations data."""
+        # First, try to get from major stations data if we have a specific stop_id
+        if stop_id:
+            major_stations_result = self._get_stop_from_major_stations(stop_id)
+            if major_stations_result:
+                return major_stations_result
+        
+        # If no specific stop_id or not found in major stations, proceed with API call
         endpoint = f"/stops/{stop_id}" if stop_id else "/stops"
         params: dict[str, Any] = {"page[limit]": page_limit}
 
@@ -116,6 +125,47 @@ class MBTAClient:
                 params["filter[radius]"] = radius
 
         return await self._request(endpoint, params)
+
+    def _get_stop_from_major_stations(self, stop_id: str) -> dict[str, Any] | None:
+        """Get stop information from major_stations.json data."""
+        try:
+            # Load major stations data
+            data_path = Path(__file__).parent / "data" / "major_stations.json"
+            if not data_path.exists():
+                return None
+            
+            with open(data_path, 'r') as f:
+                major_stations = json.load(f)
+            
+            # Search through rapid transit and commuter rail stations
+            for category in ["rapid_transit", "commuter_rail"]:
+                if category in major_stations:
+                    for station in major_stations[category]:
+                        if station.get("id") == stop_id:
+                            # Format response to match MBTA API structure
+                            return {
+                                "data": [{
+                                    "id": station["id"],
+                                    "type": "stop",
+                                    "attributes": {
+                                        "name": station["name"],
+                                        "latitude": station["latitude"],
+                                        "longitude": station["longitude"],
+                                        "municipality": station["municipality"],
+                                        "description": station["description"],
+                                        "location_type": station["location_type"],
+                                        "vehicle_type": station.get("route_type"),
+                                        "wheelchair_boarding": 1  # Default value
+                                    }
+                                }],
+                                "jsonapi": {"version": "1.0"},
+                                "links": {"self": f"/stops/{stop_id}"}
+                            }
+            
+            return None
+        except Exception as e:
+            logger.warning(f"Error loading major stations data: {e}")
+            return None
 
     async def get_predictions(
         self,

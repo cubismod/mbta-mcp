@@ -1,0 +1,49 @@
+{
+  "route_types": [
+    {
+      "id": 0,
+      "name": "Light Rail",
+      "description": "Green Line branches (B, C, D, E)",
+      "examples": ["Green-B", "Green-C", "Green-D", "Green-E"],
+      "color": "#00843D",
+      "icon": "🚊"
+    },
+    {
+      "id": 1,
+      "name": "Subway",
+      "description": "Heavy rail subway lines (Red, Orange, Blue)",
+      "examples": ["Red", "Orange", "Blue"],
+      "color": "#DA291C",
+      "icon": "🚇"
+    },
+    {
+      "id": 2,
+      "name": "Commuter Rail",
+      "description": "Regional commuter rail services",
+      "examples": ["CR-Providence", "CR-Worcester", "CR-Fitchburg"],
+      "color": "#80276C",
+      "icon": "🚆"
+    },
+    {
+      "id": 3,
+      "name": "Bus",
+      "description": "Local and express bus services",
+      "examples": ["1", "15", "22", "39"],
+      "color": "#FFC72C",
+      "icon": "🚌"
+    },
+    {
+      "id": 4,
+      "name": "Ferry",
+      "description": "Water transportation services",
+      "examples": ["Boat-F1", "Boat-F4"],
+      "color": "#003DA5",
+      "icon": "⛴️"
+    }
+  ],
+  "metadata": {
+    "last_updated": "2024-01-01",
+    "source": "MBTA V3 API",
+    "description": "Complete list of MBTA route types with descriptions and examples"
+  }
+}

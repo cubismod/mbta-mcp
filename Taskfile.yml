@@ -64,11 +64,6 @@ tasks:
       - find . -name "*.pyc" -delete
       - find . -name "*.pyo" -delete
 
-  test-server:
-    desc: Test MCP server functionality (legacy)
-    cmds:
-      - uv run python test_server.py
-
   verify:
     desc: Verify the project is properly set up and working
     cmds:

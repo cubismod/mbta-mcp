@@ -1,0 +1,207 @@
+{
+  "service_hours": {
+    "subway": {
+      "red_line": {
+        "weekdays": {
+          "first_train": "5:00 AM",
+          "last_train": "1:00 AM",
+          "peak_frequency": "3-6 minutes",
+          "off_peak_frequency": "7-10 minutes",
+          "late_night_frequency": "10-15 minutes"
+        },
+        "weekends": {
+          "first_train": "5:30 AM",
+          "last_train": "1:00 AM",
+          "frequency": "8-12 minutes"
+        },
+        "holidays": {
+          "first_train": "6:00 AM",
+          "last_train": "12:30 AM",
+          "frequency": "10-15 minutes"
+        }
+      },
+      "orange_line": {
+        "weekdays": {
+          "first_train": "5:00 AM",
+          "last_train": "1:00 AM",
+          "peak_frequency": "4-7 minutes",
+          "off_peak_frequency": "8-11 minutes",
+          "late_night_frequency": "10-15 minutes"
+        },
+        "weekends": {
+          "first_train": "5:30 AM",
+          "last_train": "1:00 AM",
+          "frequency": "8-12 minutes"
+        },
+        "holidays": {
+          "first_train": "6:00 AM",
+          "last_train": "12:30 AM",
+          "frequency": "10-15 minutes"
+        }
+      },
+      "blue_line": {
+        "weekdays": {
+          "first_train": "5:30 AM",
+          "last_train": "12:30 AM",
+          "peak_frequency": "4-7 minutes",
+          "off_peak_frequency": "8-11 minutes",
+          "late_night_frequency": "10-15 minutes"
+        },
+        "weekends": {
+          "first_train": "6:00 AM",
+          "last_train": "12:30 AM",
+          "frequency": "8-12 minutes"
+        },
+        "holidays": {
+          "first_train": "6:30 AM",
+          "last_train": "12:00 AM",
+          "frequency": "10-15 minutes"
+        }
+      },
+      "green_line": {
+        "weekdays": {
+          "first_train": "5:00 AM",
+          "last_train": "1:00 AM",
+          "peak_frequency": "3-6 minutes",
+          "off_peak_frequency": "7-10 minutes",
+          "late_night_frequency": "10-15 minutes"
+        },
+        "weekends": {
+          "first_train": "5:30 AM",
+          "last_train": "1:00 AM",
+          "frequency": "8-12 minutes"
+        },
+        "holidays": {
+          "first_train": "6:00 AM",
+          "last_train": "12:30 AM",
+          "frequency": "10-15 minutes"
+        }
+      }
+    },
+    "bus": {
+      "local_bus": {
+        "weekdays": {
+          "first_bus": "4:30 AM",
+          "last_bus": "1:30 AM",
+          "peak_frequency": "5-15 minutes",
+          "off_peak_frequency": "15-30 minutes",
+          "late_night_frequency": "30-60 minutes"
+        },
+        "weekends": {
+          "first_bus": "5:00 AM",
+          "last_bus": "1:00 AM",
+          "frequency": "15-30 minutes"
+        },
+        "holidays": {
+          "first_bus": "6:00 AM",
+          "last_bus": "12:30 AM",
+          "frequency": "30-60 minutes"
+        }
+      },
+      "express_bus": {
+        "weekdays": {
+          "first_bus": "5:00 AM",
+          "last_bus": "8:00 PM",
+          "frequency": "15-30 minutes"
+        },
+        "weekends": {
+          "first_bus": "6:00 AM",
+          "last_bus": "7:00 PM",
+          "frequency": "30-60 minutes"
+        },
+        "holidays": {
+          "first_bus": "7:00 AM",
+          "last_bus": "6:00 PM",
+          "frequency": "60 minutes"
+        }
+      }
+    },
+    "commuter_rail": {
+      "weekdays": {
+        "first_train": "4:30 AM",
+        "last_train": "12:30 AM",
+        "peak_frequency": "15-30 minutes",
+        "off_peak_frequency": "30-60 minutes",
+        "late_night_frequency": "60-120 minutes"
+      },
+      "weekends": {
+        "first_train": "6:00 AM",
+        "last_train": "11:00 PM",
+        "frequency": "60-120 minutes"
+      },
+      "holidays": {
+        "first_train": "7:00 AM",
+        "last_train": "10:00 PM",
+        "frequency": "120 minutes"
+      }
+    },
+    "ferry": {
+      "inner_harbor": {
+        "weekdays": {
+          "first_ferry": "6:30 AM",
+          "last_ferry": "7:30 PM",
+          "frequency": "30-60 minutes"
+        },
+        "weekends": {
+          "first_ferry": "8:00 AM",
+          "last_ferry": "6:00 PM",
+          "frequency": "60 minutes"
+        },
+        "holidays": {
+          "first_ferry": "9:00 AM",
+          "last_ferry": "5:00 PM",
+          "frequency": "120 minutes"
+        }
+      },
+      "outer_harbor": {
+        "weekdays": {
+          "first_ferry": "6:00 AM",
+          "last_ferry": "8:00 PM",
+          "frequency": "60-90 minutes"
+        },
+        "weekends": {
+          "first_ferry": "7:00 AM",
+          "last_ferry": "7:00 PM",
+          "frequency": "90-120 minutes"
+        },
+        "holidays": {
+          "first_ferry": "8:00 AM",
+          "last_ferry": "6:00 PM",
+          "frequency": "120 minutes"
+        }
+      }
+    }
+  },
+  "peak_hours": {
+    "weekdays": {
+      "morning_peak": "6:00 AM - 9:00 AM",
+      "evening_peak": "4:00 PM - 7:00 PM"
+    },
+    "weekends": {
+      "peak": "10:00 AM - 6:00 PM"
+    }
+  },
+  "special_services": {
+    "late_night": {
+      "description": "Limited service after midnight",
+      "available_lines": ["Red", "Orange", "Blue", "Green"],
+      "frequency": "10-15 minutes"
+    },
+    "owl_service": {
+      "description": "Overnight bus service",
+      "routes": ["1", "15", "22", "23", "28", "32", "39", "57", "66", "71", "73", "77", "111", "116", "117"],
+      "frequency": "30-60 minutes"
+    }
+  },
+  "metadata": {
+    "last_updated": "2024-01-01",
+    "source": "MBTA Service Information",
+    "description": "MBTA service hours and frequency information",
+    "notes": [
+      "Service hours may vary by station",
+      "Frequency times are approximate",
+      "Service may be reduced during holidays",
+      "Check real-time updates for current service status"
+    ]
+  }
+}

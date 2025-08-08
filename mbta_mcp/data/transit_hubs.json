@@ -1,0 +1,145 @@
+{
+  "transit_hubs": [
+    {
+      "name": "South Station",
+      "description": "Major transportation hub serving commuter rail, Red Line, and Silver Line",
+      "location": {
+        "latitude": 42.3519,
+        "longitude": -71.0552,
+        "address": "700 Atlantic Ave, Boston, MA 02110"
+      },
+      "services": ["Red", "Silver", "CR-Providence", "CR-Worcester", "CR-Franklin", "CR-Fairmount", "CR-Needham"],
+      "facilities": ["elevators", "escalators", "parking", "bike_racks", "restrooms"],
+      "connections": ["Amtrak", "Greyhound", "Peter Pan"],
+      "type": "major_hub"
+    },
+    {
+      "name": "North Station",
+      "description": "Transportation hub serving commuter rail, Green Line, and Orange Line",
+      "location": {
+        "latitude": 42.3656,
+        "longitude": -71.0616,
+        "address": "135 Causeway St, Boston, MA 02114"
+      },
+      "services": ["Green-C", "Green-D", "Green-E", "Orange", "CR-Lowell", "CR-Haverhill", "CR-Newburyport"],
+      "facilities": ["elevators", "escalators", "parking", "bike_racks", "restrooms"],
+      "connections": ["Amtrak Downeaster"],
+      "type": "major_hub"
+    },
+    {
+      "name": "Back Bay",
+      "description": "Major station serving commuter rail and Orange Line",
+      "location": {
+        "latitude": 42.3478,
+        "longitude": -71.0752,
+        "address": "145 Dartmouth St, Boston, MA 02116"
+      },
+      "services": ["Orange", "CR-Providence", "CR-Worcester", "CR-Franklin", "CR-Fairmount", "CR-Needham"],
+      "facilities": ["elevators", "escalators", "bike_racks", "restrooms"],
+      "connections": ["Amtrak"],
+      "type": "major_hub"
+    },
+    {
+      "name": "Park Street",
+      "description": "Historic station serving Red Line and Green Line",
+      "location": {
+        "latitude": 42.3564,
+        "longitude": -71.0624,
+        "address": "1 Park St, Boston, MA 02108"
+      },
+      "services": ["Red", "Green-B", "Green-C", "Green-D", "Green-E"],
+      "facilities": ["elevators", "escalators", "bike_racks", "restrooms"],
+      "connections": [],
+      "type": "transfer_hub"
+    },
+    {
+      "name": "Downtown Crossing",
+      "description": "Major transfer point between Red Line and Orange Line",
+      "location": {
+        "latitude": 42.3555,
+        "longitude": -71.0604,
+        "address": "Washington St & Summer St, Boston, MA 02108"
+      },
+      "services": ["Red", "Orange"],
+      "facilities": ["elevators", "escalators", "bike_racks", "restrooms"],
+      "connections": [],
+      "type": "transfer_hub"
+    },
+    {
+      "name": "Government Center",
+      "description": "Transfer point between Green Line and Blue Line",
+      "location": {
+        "latitude": 42.3597,
+        "longitude": -71.0592,
+        "address": "1 Cambridge St, Boston, MA 02114"
+      },
+      "services": ["Green-B", "Green-C", "Green-D", "Green-E", "Blue"],
+      "facilities": ["elevators", "escalators", "bike_racks", "restrooms"],
+      "connections": [],
+      "type": "transfer_hub"
+    },
+    {
+      "name": "Alewife",
+      "description": "Northern terminus of Red Line with parking",
+      "location": {
+        "latitude": 42.3961,
+        "longitude": -71.1407,
+        "address": "Alewife Brook Pkwy, Cambridge, MA 02140"
+      },
+      "services": ["Red"],
+      "facilities": ["elevators", "escalators", "parking", "bike_racks", "restrooms"],
+      "connections": ["MBTA Bus Routes"],
+      "type": "terminal"
+    },
+    {
+      "name": "Wonderland",
+      "description": "Northern terminus of Blue Line with parking",
+      "location": {
+        "latitude": 42.4138,
+        "longitude": -70.9914,
+        "address": "1300 N Shore Rd, Revere, MA 02151"
+      },
+      "services": ["Blue"],
+      "facilities": ["elevators", "escalators", "parking", "bike_racks", "restrooms"],
+      "connections": ["MBTA Bus Routes"],
+      "type": "terminal"
+    },
+    {
+      "name": "Forest Hills",
+      "description": "Southern terminus of Orange Line with parking",
+      "location": {
+        "latitude": 42.2989,
+        "longitude": -71.1143,
+        "address": "Washington St & Hyde Park Ave, Jamaica Plain, MA 02130"
+      },
+      "services": ["Orange"],
+      "facilities": ["elevators", "escalators", "parking", "bike_racks", "restrooms"],
+      "connections": ["MBTA Bus Routes"],
+      "type": "terminal"
+    },
+    {
+      "name": "Logan Airport",
+      "description": "Airport station serving Blue Line and Silver Line",
+      "location": {
+        "latitude": 42.3743,
+        "longitude": -71.0304,
+        "address": "1 Harborside Dr, Boston, MA 02128"
+      },
+      "services": ["Blue", "Silver"],
+      "facilities": ["elevators", "escalators", "bike_racks", "restrooms"],
+      "connections": ["Logan Airport Shuttle", "Rental Cars"],
+      "type": "airport"
+    }
+  ],
+  "metadata": {
+    "last_updated": "2024-01-01",
+    "source": "MBTA V3 API",
+    "description": "Major transit hubs and transfer points in the MBTA system",
+    "hub_types": {
+      "major_hub": "Primary transportation centers with multiple services",
+      "transfer_hub": "Key transfer points between different lines",
+      "terminal": "End-of-line stations with parking facilities",
+      "airport": "Airport-specific transportation connections"
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "fare_information": {
+    "subway_bus": {
+      "local_bus": {
+        "cash_fare": 2.40,
+        "charlie_card": 1.70,
+        "charlie_ticket": 2.40,
+        "description": "Local bus service within MBTA service area"
+      },
+      "subway": {
+        "cash_fare": 2.40,
+        "charlie_card": 2.40,
+        "charlie_ticket": 2.40,
+        "description": "Subway service (Red, Orange, Blue, Green Lines)"
+      },
+      "express_bus": {
+        "cash_fare": 4.25,
+        "charlie_card": 4.25,
+        "charlie_ticket": 4.25,
+        "description": "Express bus service"
+      },
+      "inner_express_bus": {
+        "cash_fare": 3.35,
+        "charlie_card": 3.35,
+        "charlie_ticket": 3.35,
+        "description": "Inner express bus service"
+      }
+    },
+    "commuter_rail": {
+      "zone_1a": {
+        "one_way": 2.40,
+        "monthly": 90.00,
+        "description": "Zone 1A (within subway fare zone)"
+      },
+      "zone_1": {
+        "one_way": 6.50,
+        "monthly": 220.00,
+        "description": "Zone 1"
+      },
+      "zone_2": {
+        "one_way": 7.00,
+        "monthly": 232.00,
+        "description": "Zone 2"
+      },
+      "zone_3": {
+        "one_way": 8.25,
+        "monthly": 272.00,
+        "description": "Zone 3"
+      },
+      "zone_4": {
+        "one_way": 9.75,
+        "monthly": 320.00,
+        "description": "Zone 4"
+      },
+      "zone_5": {
+        "one_way": 11.50,
+        "monthly": 380.00,
+        "description": "Zone 5"
+      },
+      "zone_6": {
+        "one_way": 12.25,
+        "monthly": 404.00,
+        "description": "Zone 6"
+      },
+      "zone_7": {
+        "one_way": 13.25,
+        "monthly": 436.00,
+        "description": "Zone 7"
+      },
+      "zone_8": {
+        "one_way": 13.25,
+        "monthly": 436.00,
+        "description": "Zone 8"
+      },
+      "zone_9": {
+        "one_way": 13.25,
+        "monthly": 436.00,
+        "description": "Zone 9"
+      },
+      "zone_10": {
+        "one_way": 13.25,
+        "monthly": 436.00,
+        "description": "Zone 10"
+      }
+    },
+    "ferry": {
+      "inner_harbor": {
+        "one_way": 3.70,
+        "monthly": 90.00,
+        "description": "Inner Harbor Ferry"
+      },
+      "outer_harbor": {
+        "one_way": 9.75,
+        "monthly": 320.00,
+        "description": "Outer Harbor Ferry"
+      }
+    },
+    "passes": {
+      "link_pass": {
+        "price": 90.00,
+        "description": "Monthly pass for subway, bus, and Zone 1A commuter rail"
+      },
+      "commuter_rail_pass": {
+        "price": "varies_by_zone",
+        "description": "Monthly pass for commuter rail (price varies by zone)"
+      },
+      "senior_pass": {
+        "price": 30.00,
+        "description": "Monthly pass for seniors (65+)"
+      },
+      "student_pass": {
+        "price": "varies_by_institution",
+        "description": "Student pass (price varies by educational institution)"
+      }
+    },
+    "reduced_fares": {
+      "senior": {
+        "discount": "50%",
+        "description": "Reduced fare for seniors (65+)"
+      },
+      "student": {
+        "discount": "varies",
+        "description": "Reduced fare for students (varies by institution)"
+      },
+      "youth": {
+        "discount": "50%",
+        "description": "Reduced fare for youth (ages 5-11)"
+      },
+      "disabled": {
+        "discount": "50%",
+        "description": "Reduced fare for persons with disabilities"
+      }
+    },
+    "payment_methods": {
+      "charlie_card": {
+        "description": "Reusable plastic card with stored value",
+        "benefits": ["Reduced fares", "Free transfers", "Auto-reload available"]
+      },
+      "charlie_ticket": {
+        "description": "Paper ticket with magnetic stripe",
+        "benefits": ["Single use", "Available at vending machines"]
+      },
+      "cash": {
+        "description": "Cash payment on buses",
+        "benefits": ["No card required", "Exact change needed"]
+      },
+      "mobile_app": {
+        "description": "MBTA mTicket app for commuter rail and ferry",
+        "benefits": ["Digital tickets", "Convenient purchase"]
+      }
+    }
+  },
+  "metadata": {
+    "last_updated": "2024-01-01",
+    "source": "MBTA Fare Information",
+    "description": "Complete MBTA fare structure and payment information",
+    "notes": [
+      "Fares subject to change",
+      "Some discounts require proof of eligibility",
+      "Transfers are free within 2 hours on Charlie Card",
+      "Commuter rail zones are based on distance from Boston"
+    ]
+  }
+}

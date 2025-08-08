@@ -1,0 +1,265 @@
+{
+  "trip_planning_prompts": {
+    "common_scenarios": {
+      "airport_transfer": {
+        "title": "Airport Transfer Planning",
+        "description": "Plan trips to and from Logan Airport",
+        "prompt": "Plan a trip from {origin} to Logan Airport (42.3743, -71.0304) for {date} at {time}. Consider luggage and accessibility needs.",
+        "variables": ["origin", "date", "time"],
+        "examples": [
+          "Plan a trip from South Station to Logan Airport for tomorrow at 8:00 AM",
+          "Plan a trip from Harvard Square to Logan Airport for Friday at 6:00 PM with luggage"
+        ]
+      },
+      "commute_planning": {
+        "title": "Daily Commute Planning",
+        "description": "Plan regular commute routes with real-time data",
+        "prompt": "Plan my daily commute from {home} to {work} for {day_of_week} at {departure_time}. Show me the fastest and most reliable options.",
+        "variables": ["home", "work", "day_of_week", "departure_time"],
+        "examples": [
+          "Plan my daily commute from Cambridge to Downtown Boston for Monday at 8:30 AM",
+          "Plan my daily commute from Brookline to Kendall Square for Tuesday at 9:00 AM"
+        ]
+      },
+      "event_planning": {
+        "title": "Event Trip Planning",
+        "description": "Plan trips to major events and venues",
+        "prompt": "Plan a trip from {origin} to {event_venue} for {event_date} at {event_time}. Consider event crowds and parking.",
+        "variables": ["origin", "event_venue", "event_date", "event_time"],
+        "examples": [
+          "Plan a trip from MIT to Fenway Park for tonight at 7:00 PM",
+          "Plan a trip from Harvard Square to TD Garden for Saturday at 8:00 PM"
+        ]
+      },
+      "accessibility_planning": {
+        "title": "Accessible Trip Planning",
+        "description": "Plan wheelchair-accessible routes",
+        "prompt": "Plan a wheelchair-accessible trip from {origin} to {destination} for {date} at {time}. Ensure all stations have elevators.",
+        "variables": ["origin", "destination", "date", "time"],
+        "examples": [
+          "Plan a wheelchair-accessible trip from Alewife to South Station for tomorrow at 10:00 AM",
+          "Plan a wheelchair-accessible trip from Back Bay to Harvard Square for Friday at 2:00 PM"
+        ]
+      },
+      "late_night_travel": {
+        "title": "Late Night Travel Planning",
+        "description": "Plan trips during late night hours",
+        "prompt": "Plan a late night trip from {origin} to {destination} for {date} at {time}. Consider limited service hours.",
+        "variables": ["origin", "destination", "date", "time"],
+        "examples": [
+          "Plan a late night trip from Downtown Boston to Cambridge for tonight at 11:30 PM",
+          "Plan a late night trip from Harvard Square to Brookline for Saturday at 12:30 AM"
+        ]
+      },
+      "weekend_excursion": {
+        "title": "Weekend Excursion Planning",
+        "description": "Plan leisure trips with relaxed timing",
+        "prompt": "Plan a weekend trip from {origin} to {destination} for {date}. I'm flexible on timing and prefer scenic routes.",
+        "variables": ["origin", "destination", "date"],
+        "examples": [
+          "Plan a weekend trip from Boston to Salem for this Saturday",
+          "Plan a weekend trip from Cambridge to Revere Beach for Sunday"
+        ]
+      }
+    },
+    "specialized_prompts": {
+      "student_commute": {
+        "title": "Student Commute Planning",
+        "description": "Plan trips for students with budget considerations",
+        "prompt": "Plan a student-friendly trip from {origin} to {campus} for {day} at {time}. Consider student discounts and campus shuttle connections.",
+        "variables": ["origin", "campus", "day", "time"],
+        "examples": [
+          "Plan a student-friendly trip from Allston to MIT for Monday at 9:00 AM",
+          "Plan a student-friendly trip from Somerville to Harvard for Tuesday at 10:00 AM"
+        ]
+      },
+      "medical_appointment": {
+        "title": "Medical Appointment Planning",
+        "description": "Plan trips to medical facilities with extra time",
+        "prompt": "Plan a trip from {origin} to {medical_facility} for {date} at {appointment_time}. Add extra buffer time for medical appointments.",
+        "variables": ["origin", "medical_facility", "date", "appointment_time"],
+        "examples": [
+          "Plan a trip from Cambridge to Mass General Hospital for tomorrow at 2:00 PM",
+          "Plan a trip from Brookline to Brigham and Women's Hospital for Friday at 10:30 AM"
+        ]
+      },
+      "shopping_trip": {
+        "title": "Shopping Trip Planning",
+        "description": "Plan trips to shopping destinations",
+        "prompt": "Plan a shopping trip from {origin} to {shopping_destination} for {date}. Consider carrying bags and multiple stops.",
+        "variables": ["origin", "shopping_destination", "date"],
+        "examples": [
+          "Plan a shopping trip from Boston to Assembly Row for this Saturday",
+          "Plan a shopping trip from Cambridge to Prudential Center for Sunday"
+        ]
+      },
+      "family_trip": {
+        "title": "Family Trip Planning",
+        "description": "Plan trips suitable for families with children",
+        "prompt": "Plan a family-friendly trip from {origin} to {destination} for {date} at {time}. Consider strollers and child-friendly routes.",
+        "variables": ["origin", "destination", "date", "time"],
+        "examples": [
+          "Plan a family-friendly trip from Cambridge to Boston Children's Museum for Saturday at 10:00 AM",
+          "Plan a family-friendly trip from Brookline to New England Aquarium for Sunday at 1:00 PM"
+        ]
+      },
+      "business_meeting": {
+        "title": "Business Meeting Planning",
+        "description": "Plan trips for business meetings with reliability focus",
+        "prompt": "Plan a business trip from {origin} to {business_location} for {date} at {meeting_time}. Prioritize reliability and professional appearance.",
+        "variables": ["origin", "business_location", "date", "meeting_time"],
+        "examples": [
+          "Plan a business trip from Cambridge to Financial District for tomorrow at 9:00 AM",
+          "Plan a business trip from Boston to Kendall Square for Thursday at 2:00 PM"
+        ]
+      }
+    },
+    "emergency_prompts": {
+      "service_disruption": {
+        "title": "Service Disruption Planning",
+        "description": "Plan alternative routes when primary service is disrupted",
+        "prompt": "The {affected_line} is experiencing delays. Plan an alternative route from {origin} to {destination} avoiding {affected_line}.",
+        "variables": ["affected_line", "origin", "destination"],
+        "examples": [
+          "The Red Line is experiencing delays. Plan an alternative route from Harvard to Downtown avoiding the Red Line",
+          "The Green Line is experiencing delays. Plan an alternative route from Boston College to Downtown avoiding the Green Line"
+        ]
+      },
+      "weather_emergency": {
+        "title": "Weather Emergency Planning",
+        "description": "Plan trips during severe weather conditions",
+        "prompt": "There's severe weather affecting transit. Plan a safe route from {origin} to {destination} with weather considerations.",
+        "variables": ["origin", "destination"],
+        "examples": [
+          "There's severe weather affecting transit. Plan a safe route from Cambridge to Boston",
+          "There's severe weather affecting transit. Plan a safe route from Brookline to Downtown"
+        ]
+      }
+    },
+    "optimization_prompts": {
+      "fastest_route": {
+        "title": "Fastest Route Planning",
+        "description": "Find the fastest route regardless of transfers",
+        "prompt": "Find the fastest possible route from {origin} to {destination} for {date} at {time}. Minimize total travel time.",
+        "variables": ["origin", "destination", "date", "time"],
+        "examples": [
+          "Find the fastest possible route from Alewife to South Station for tomorrow at 8:00 AM",
+          "Find the fastest possible route from Harvard to Logan Airport for Friday at 6:00 PM"
+        ]
+      },
+      "fewest_transfers": {
+        "title": "Minimal Transfer Planning",
+        "description": "Find routes with the fewest transfers",
+        "prompt": "Plan a route from {origin} to {destination} for {date} at {time} with the fewest possible transfers.",
+        "variables": ["origin", "destination", "date", "time"],
+        "examples": [
+          "Plan a route from Cambridge to Downtown with the fewest possible transfers for tomorrow at 9:00 AM",
+          "Plan a route from Brookline to Kendall Square with the fewest possible transfers for Tuesday at 10:00 AM"
+        ]
+      },
+      "scenic_route": {
+        "title": "Scenic Route Planning",
+        "description": "Find routes with scenic views and interesting stops",
+        "prompt": "Plan a scenic route from {origin} to {destination} for {date}. Include interesting stops and views along the way.",
+        "variables": ["origin", "destination", "date"],
+        "examples": [
+          "Plan a scenic route from Boston to Cambridge for this Saturday",
+          "Plan a scenic route from Cambridge to Brookline for Sunday"
+        ]
+      },
+      "budget_friendly": {
+        "title": "Budget-Friendly Planning",
+        "description": "Find the most cost-effective routes",
+        "prompt": "Plan the most budget-friendly route from {origin} to {destination} for {date} at {time}. Consider fare costs and discounts.",
+        "variables": ["origin", "destination", "date", "time"],
+        "examples": [
+          "Plan the most budget-friendly route from Cambridge to Downtown for tomorrow at 8:00 AM",
+          "Plan the most budget-friendly route from Brookline to Logan Airport for Friday at 6:00 PM"
+        ]
+      }
+    },
+    "template_variables": {
+      "common_origins": [
+        "Cambridge",
+        "Boston",
+        "Brookline",
+        "Somerville",
+        "Allston",
+        "Brighton",
+        "Jamaica Plain",
+        "Roxbury",
+        "Dorchester",
+        "South Boston",
+        "Charlestown",
+        "East Boston",
+        "Revere",
+        "Chelsea",
+        "Medford",
+        "Arlington",
+        "Belmont",
+        "Watertown",
+        "Newton",
+        "Waltham"
+      ],
+      "common_destinations": [
+        "Downtown Boston",
+        "Financial District",
+        "Back Bay",
+        "Beacon Hill",
+        "North End",
+        "South End",
+        "Fenway",
+        "Kendall Square",
+        "MIT",
+        "Harvard Square",
+        "Boston University",
+        "Northeastern University",
+        "Boston College",
+        "Logan Airport",
+        "South Station",
+        "North Station",
+        "TD Garden",
+        "Fenway Park",
+        "Boston Common",
+        "Public Garden"
+      ],
+      "time_formats": [
+        "8:00 AM",
+        "9:30 AM",
+        "12:00 PM",
+        "2:15 PM",
+        "5:00 PM",
+        "6:30 PM",
+        "8:00 PM",
+        "10:30 PM",
+        "11:45 PM"
+      ],
+      "days_of_week": [
+        "Monday",
+        "Tuesday", 
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    "usage_instructions": {
+      "how_to_use": "Replace the variables in curly braces with actual values to create a complete trip planning prompt.",
+      "best_practices": [
+        "Always specify both origin and destination coordinates when possible",
+        "Include specific times for more accurate planning",
+        "Mention special requirements (accessibility, luggage, etc.) upfront",
+        "Consider weather and service alerts for real-time planning"
+      ],
+      "coordinate_format": "Use latitude,longitude format (e.g., 42.3601,-71.0942) for precise locations",
+      "address_format": "Use street addresses for general locations when coordinates aren't available"
+    },
+    "metadata": {
+      "last_updated": "2024-01-01",
+      "source": "MBTA Trip Planning Prompts",
+      "description": "Comprehensive collection of trip planning prompts for common scenarios",
+      "version": "1.0"
+    }
+  }
+}
