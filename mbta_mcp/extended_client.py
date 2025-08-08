@@ -329,13 +329,43 @@ class ExtendedMBTAClient(MBTAClient):
         page_limit: int = 10,
     ) -> dict[str, Any]:
         """Get stops near a specific location."""
+        # Since MBTA API geographic filtering is unreliable, fetch a larger set
+        # and filter client-side by actual distance
         params: dict[str, Any] = {
-            "page[limit]": page_limit,
-            "filter[latitude]": latitude,
-            "filter[longitude]": longitude,
-            "filter[radius]": radius,
+            "page[limit]": PAGE_LIMIT,  # Fetch maximum to ensure we get nearby stops
         }
-        return await self._request("/stops", params)
+        result = await self._request("/stops", params)
+
+        # Filter by actual distance client-side since MBTA API geographic filtering is unreliable
+        if "data" in result:
+            nearby_stops = []
+            radius_km = radius / 1000  # Convert to kilometers
+
+            for stop in result["data"]:
+                # Skip stops without coordinates
+                if (
+                    not stop["attributes"]["latitude"]
+                    or not stop["attributes"]["longitude"]
+                ):
+                    continue
+
+                stop_lat = float(stop["attributes"]["latitude"])
+                stop_lon = float(stop["attributes"]["longitude"])
+
+                distance_km = self._haversine_distance(
+                    latitude, longitude, stop_lat, stop_lon
+                )
+
+                if distance_km <= radius_km:
+                    # Add distance info for sorting
+                    stop["_distance_km"] = distance_km
+                    nearby_stops.append(stop)
+
+            # Sort by distance and limit results
+            nearby_stops.sort(key=lambda x: x["_distance_km"])
+            result["data"] = nearby_stops[:page_limit]
+
+        return result
 
     async def get_predictions_for_stop(
         self,
