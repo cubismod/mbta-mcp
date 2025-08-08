@@ -13,6 +13,8 @@ An MCP (Model Context Protocol) server for the MBTA V3 API, providing access to 
 - **Trips**: Trip information and details
 - **Alerts**: Service alerts and disruptions
 - **Vehicles**: Real-time vehicle positions
+- **Trip Planning**: Intelligent multi-modal journey planning with real-time data
+- **Route Alternatives**: Alternative routing options with transfer optimization
 - **External APIs**: Vehicle positions and alerts from external sources
 - **Track Predictions**: Machine learning-powered track assignment predictions
 - **Historical Data**: Access to historical track assignments and performance metrics
@@ -123,6 +125,11 @@ uv run mbta-cli tools
 - `mbta_get_trips` - Get trip information and details
 - `mbta_get_alerts` - Get service alerts and disruptions
 - `mbta_get_vehicles` - Get real-time vehicle positions
+
+**Trip Planning:**
+
+- `mbta_plan_trip` - Plan multi-modal journeys with real-time data and transfer optimization
+- `mbta_get_route_alternatives` - Find alternative routes with different transit modes
 
 **Extended Features:**
 
@@ -311,6 +318,96 @@ Get historical track assignments for analysis and pattern recognition.
 
 - **Parameters:** `station_id` (required), `route_id` (required), `days` (default: 30)
 - **Returns:** Historical track assignment data with actual usage patterns
+
+### Trip Planning Tools
+
+The MBTA MCP server provides intelligent trip planning capabilities that combine real-time transit data with multi-modal journey optimization. These tools help plan efficient journeys across the MBTA network with support for accessibility requirements and transfer preferences.
+
+#### `mbta_plan_trip`
+
+Plan multi-modal journeys with real-time data and transfer optimization. This tool finds the best transit routes between two locations, considering walking distance, transfer limits, and accessibility requirements.
+
+**Parameters:**
+- `origin_lat` (required): Origin latitude coordinate
+- `origin_lon` (required): Origin longitude coordinate  
+- `dest_lat` (required): Destination latitude coordinate
+- `dest_lon` (required): Destination longitude coordinate
+- `departure_time` (optional): ISO 8601 formatted departure time (e.g., "2025-01-01T10:00:00-05:00")
+- `max_walk_distance` (optional): Maximum walking distance in meters (default: 800)
+- `max_transfers` (optional): Maximum number of transfers allowed (default: 2)
+- `prefer_fewer_transfers` (optional): Prioritize routes with fewer transfers (default: true)
+- `wheelchair_accessible` (optional): Only include accessible routes and vehicles (default: false)
+
+**Returns:** JSON with trip options including:
+- Origin and destination coordinates with nearby transit stops
+- Multiple route alternatives with detailed segments
+- Walking directions and transit connections
+- Real-time departure predictions and schedule information
+- Transfer points and walking times between stations
+- Accessibility information for each route option
+
+**Example Usage:**
+```
+Plan a trip from MIT to Harvard Square:
+- origin_lat: 42.3601
+- origin_lon: -71.0942  
+- dest_lat: 42.3736
+- dest_lon: -71.1190
+- max_walk_distance: 600
+- prefer_fewer_transfers: true
+```
+
+#### `mbta_get_route_alternatives`
+
+Find alternative routes with different transit modes. This tool excludes specified primary route types to discover backup options, useful when primary routes have service disruptions.
+
+**Parameters:**
+- `origin_lat` (required): Origin latitude coordinate
+- `origin_lon` (required): Origin longitude coordinate
+- `dest_lat` (required): Destination latitude coordinate  
+- `dest_lon` (required): Destination longitude coordinate
+- `primary_route_modes` (optional): Array of route type IDs to exclude (e.g., ["1"] to exclude subway)
+- `departure_time` (optional): ISO 8601 formatted departure time
+- `max_walk_distance` (optional): Maximum walking distance in meters (default: 800)
+- `max_transfers` (optional): Maximum transfers (default: 2)
+- `wheelchair_accessible` (optional): Require accessible routes (default: false)
+
+**Route Type IDs:**
+- `"0"` - Light Rail (Green Line branches)
+- `"1"` - Subway (Red, Orange, Blue Lines)  
+- `"2"` - Commuter Rail
+- `"3"` - Bus
+- `"4"` - Ferry
+
+**Returns:** Alternative route options excluding the specified primary modes, with the same detailed structure as `mbta_plan_trip`.
+
+**Example Usage:**
+```
+Find bus alternatives when subway is disrupted:
+- origin_lat: 42.3601
+- origin_lon: -71.0942
+- dest_lat: 42.3736  
+- dest_lon: -71.1190
+- primary_route_modes: ["1", "0"]  // Exclude subway and light rail
+- max_walk_distance: 1000
+```
+
+### Trip Planning Use Cases
+
+**Morning Commute Planning:**
+Use `mbta_plan_trip` with departure time to find the best route for your daily commute, considering real-time delays and service alerts.
+
+**Accessibility-First Routing:**
+Enable `wheelchair_accessible: true` to ensure all suggested routes are fully accessible, including elevators and ramps at stations.
+
+**Service Disruption Backup:**
+When alerts indicate subway delays, use `mbta_get_route_alternatives` to find bus routes that avoid the affected lines.
+
+**Event Planning:**
+For large events, plan trips with longer walking distances and more transfers to distribute passenger load across the transit network.
+
+**Tourist Assistance:**
+Combine trip planning with nearby stops and predictions to help visitors navigate Boston's transit system efficiently.
 
 ## Integration with LLMs
 
@@ -537,6 +634,7 @@ On Windows, edit `%APPDATA%\Claude\claude_desktop_config.json` with the same con
 
 Once connected, you can ask your LLM questions like:
 
+**Core Transit Information:**
 - "What are the next Red Line trains from Harvard?"
 - "Are there any service alerts for the Green Line?"
 - "Find the nearest T stops to 42.3601° N, 71.0589° W"
@@ -544,6 +642,17 @@ Once connected, you can ask your LLM questions like:
 - "Show me the schedule for Route 1 bus"
 - "Get real-time vehicle positions for all MBTA vehicles"
 - "What are the current service alerts and delays?"
+
+**Trip Planning:**
+- "Plan a trip from MIT (42.3601, -71.0942) to Harvard Square (42.3736, -71.1190)"
+- "How do I get from Back Bay to Logan Airport using only accessible routes?"
+- "Find alternative routes from Downtown Crossing to Fenway that avoid the Green Line"
+- "Plan a wheelchair-accessible journey from South Station to Cambridge with minimal walking"
+- "What's the best way to get from Kendall Square to Copley at 8:30 AM tomorrow?"
+- "Show me bus alternatives from Harvard to MIT when the Red Line is down"
+- "Plan a trip allowing up to 1200 meters of walking and 3 transfers maximum"
+
+**Advanced Features:**
 - "Predict which track the 3:30 PM Providence train will use at South Station"
 - "Show me track prediction accuracy statistics for South Station"
 - "Get historical track assignments for the last 30 days"
